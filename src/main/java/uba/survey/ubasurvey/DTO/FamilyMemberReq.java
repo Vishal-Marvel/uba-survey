@@ -1,16 +1,13 @@
-package uba.survey.ubasurvey.entity.householdsurvey;
+package uba.survey.ubasurvey.DTO;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
-@Entity
 @Data
-public class FamilyMember {
-    @Id
-    private String id = UUID.randomUUID().toString();
+@Hidden
+@NoArgsConstructor
+public class FamilyMemberReq {
     private String name;
     private Integer age;
     private String gender;
@@ -24,5 +21,4 @@ public class FamilyMember {
     private Boolean MNREGAJobCard;
     private Boolean inSelfHelpGroups;
     private String occupation;
-
 }

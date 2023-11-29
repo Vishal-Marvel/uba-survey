@@ -1,4 +1,4 @@
-package uba.survey.ubasurvey.entity.villagesurvey;
+package uba.survey.ubasurvey.entity.villageSurvey;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -247,8 +247,12 @@ public class VillageSurvey {
     private Boolean energyPlantation;
 
     // If Yes, which species (Top 3) and area (in acre)
+    private String energyPlantationSpeciesTop1;
+    private Double energyPlantationAreaTop1;
+    private String energyPlantationSpeciesTop2;
+    private Double energyPlantationAreaTop2;
     private String energyPlantationSpeciesTop3;
-    private Double energyPlantationAreaAcre;
+    private Double energyPlantationAreaTop3;
 
     // 5. Common Village Electricity Requirements
 

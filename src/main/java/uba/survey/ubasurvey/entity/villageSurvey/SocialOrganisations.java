@@ -1,4 +1,4 @@
-package uba.survey.ubasurvey.entity.villagesurvey;
+package uba.survey.ubasurvey.entity.villageSurvey;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -8,10 +8,10 @@ import java.util.UUID;
 
 @Entity
 @Data
-public class Dharamashala {
+public class SocialOrganisations {
     @Id
     private String id = UUID.randomUUID().toString();
-    // 5.e) Electrical Appliances in Dharamashala:
+    // 5.f) Electrical Appliances in Social Organisations (Youth/Mahila Clubs):
     // *Electrical Appliances:
     private Integer cflLed;
     private Integer fan;
@@ -25,16 +25,16 @@ public class Dharamashala {
     private Integer airConditioner;
 
     // Working duration/day (in hours) of Electrical Appliances in Panchayat office
-    private Integer cflLedDuration;
-    private Integer fanDuration;
-    private Integer desertCoolerDuration;
-    private Integer tvDuration;
-    private Integer refrigeratorDuration;
-    private Integer musicSystemDuration;
-    private Integer electricMotorPumpDuration;
-    private Integer heaterDuration;
-    private Integer electricIronDuration;
-    private Integer airConditionerDuration;
+    private Double cflLedDuration;
+    private Double fanDuration;
+    private Double desertCoolerDuration;
+    private Double tvDuration;
+    private Double refrigeratorDuration;
+    private Double musicSystemDuration;
+    private Double electricMotorPumpDuration;
+    private Double heaterDuration;
+    private Double electricIronDuration;
+    private Double airConditionerDuration;
 
 
 }

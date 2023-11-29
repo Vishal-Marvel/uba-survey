@@ -1,16 +1,18 @@
-package uba.survey.ubasurvey.entity.householdsurvey;
+package uba.survey.ubasurvey.DTO;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Entity
 @Data
-public class CropDetails {
-    @Id
-    private String id = UUID.randomUUID().toString();
+@Hidden
+@NoArgsConstructor
+public class CropDetailsReq {
+
 
     // 10.1 Crops
     private String crop;

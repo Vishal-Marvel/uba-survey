@@ -1,4 +1,4 @@
-package uba.survey.ubasurvey.entity.householdsurvey;
+package uba.survey.ubasurvey.entity.householdSurvey;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

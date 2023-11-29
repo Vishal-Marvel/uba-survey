@@ -1,16 +1,18 @@
-package uba.survey.ubasurvey.entity.householdsurvey;
+package uba.survey.ubasurvey.DTO;
 
-import jakarta.persistence.*;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import uba.survey.ubasurvey.entity.householdSurvey.AppliancesUsed;
+import uba.survey.ubasurvey.entity.householdSurvey.CropDetails;
+import uba.survey.ubasurvey.entity.householdSurvey.FamilyMember;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity
 @Data
-public class HouseHoldSurvey {
-    @Id
-    private String id = UUID.randomUUID().toString();
-    // Schedule Filled by (Name)
+@NoArgsConstructor
+public class HouseholdRequest {
     private String filledByName;
 
     // Date of Survey
@@ -46,11 +48,8 @@ public class HouseHoldSurvey {
     private String bioGasPlant;
 
     // 3. Family Member Information
-    @ManyToMany(fetch = FetchType.EAGER)
-    // Eager loading allows the roles to be loaded during the UserDetails extraction
-    @JoinTable(name = "survey_members", joinColumns = @JoinColumn(name = "survey_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "member_id", referencedColumnName = "id"))
-    private Set<FamilyMember> roles = new HashSet<>();
+
+    private List<FamilyMemberReq> members = new ArrayList<>();
 
     // 4. Migration Status in a family
     private Boolean familyMigratesForWork;
@@ -151,11 +150,8 @@ public class HouseHoldSurvey {
     // 7.5 If cooking in Chullah
     private String chullahType;
     //Appliances
-    @ManyToMany(fetch = FetchType.EAGER)
-    // Eager loading allows the roles to be loaded during the UserDetails extraction
-    @JoinTable(name = "survey_appliances", joinColumns = @JoinColumn(name = "survey_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "appliance_id", referencedColumnName = "id"))
-    private Set<AppliancesUsed> appliancesAndDuration = new HashSet<>();
+
+    private List<AppliancesUsedReq> appliancesAndDuration = new ArrayList<>();
 
     // 8. Landholding Information (in Acres)
 
@@ -212,11 +208,7 @@ public class HouseHoldSurvey {
 
 
     // 10. Agricultural Produce in a normal year (Top 5)
-    @ManyToMany(fetch = FetchType.EAGER)
-    // Eager loading allows the roles to be loaded during the UserDetails extraction
-    @JoinTable(name = "survey_crops", joinColumns = @JoinColumn(name = "survey_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "crop_id", referencedColumnName = "id"))
-    private Set<CropDetails> cropDetails = new HashSet<>();
+    private List<CropDetailsReq> cropDetails = new ArrayList<>();
 
     // 11. Livestock Numbers (in numbers)
 
