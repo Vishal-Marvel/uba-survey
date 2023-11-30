@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 @Data
-@Hidden
 @NoArgsConstructor
 public class VillageRequest {
     private String surveyorName;

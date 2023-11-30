@@ -1,18 +1,26 @@
 package uba.survey.ubasurvey.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 import uba.survey.ubasurvey.DTO.*;
 import uba.survey.ubasurvey.entity.householdSurvey.AppliancesUsed;
 import uba.survey.ubasurvey.entity.householdSurvey.CropDetails;
 import uba.survey.ubasurvey.entity.householdSurvey.FamilyMember;
 import uba.survey.ubasurvey.entity.householdSurvey.HouseholdSurvey;
 import uba.survey.ubasurvey.entity.villageSurvey.*;
+import uba.survey.ubasurvey.exceptions.APIException;
 import uba.survey.ubasurvey.repository.householdSurvey.AppliancesUsedRepo;
 import uba.survey.ubasurvey.repository.householdSurvey.CropDetailsRepo;
 import uba.survey.ubasurvey.repository.householdSurvey.FamilyMemberRepo;
 import uba.survey.ubasurvey.repository.householdSurvey.HouseholdSurveyRepo;
 import uba.survey.ubasurvey.repository.villageSurvey.*;
+
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -26,11 +34,13 @@ public class SurveyServices {
     private final SocialOrganisationsRepo socialOrganisationsRepo;
     private final TrainingProductionCentresRepo trainingProductionCentresRepo;
     private final VillageSurveyRepo villageSurveyRepo;
-
     private final AppliancesUsedRepo appliancesUsedRepo;
     private final CropDetailsRepo cropDetailsRepo;
     private final FamilyMemberRepo familyMemberRepo;
     private final HouseholdSurveyRepo householdSurveyRepo;
+
+    private final ExcelService<VillageRequest> villageRequestExcelService;
+    private final ExcelService<HouseholdRequest> householdSurveyExcelService;
 
     public String handleVillageSurvey(VillageRequest villageRequest) {
         VillageSurvey villageSurvey = new VillageSurvey();
@@ -676,5 +686,653 @@ public class SurveyServices {
 
         householdSurveyRepo.save(householdSurvey);
         return "Houldhold survey Added";
+    }
+
+    public VillageRequest convertVillageToDto(VillageSurvey villageSur){
+        VillageRequest villageRequest = new VillageRequest();
+        villageRequest.setSurveyorName(villageSur.getSurveyorName());
+        villageRequest.setRespondentName(villageSur.getRespondentName());
+        villageRequest.setDateOfSurvey(villageSur.getDateOfSurvey());
+        villageRequest.setVillageId(villageSur.getVillageId());
+        villageRequest.setNameOfTheVillage(villageSur.getNameOfTheVillage());
+        villageRequest.setGramPanchayat(villageSur.getGramPanchayat());
+        villageRequest.setNumberOfWards(villageSur.getNumberOfWards());
+        villageRequest.setNumberOfHamlets(villageSur.getNumberOfHamlets());
+        villageRequest.setBlock(villageSur.getBlock());
+        villageRequest.setDistrict(villageSur.getDistrict());
+        villageRequest.setState(villageSur.getState());
+        villageRequest.setLokSabhaConstituency(villageSur.getLokSabhaConstituency());
+        villageRequest.setDistanceFromDistrictHQ(villageSur.getDistanceFromDistrictHQ());
+        villageRequest.setAreaOfVillageAcres(villageSur.getAreaOfVillageAcres());
+        villageRequest.setArableLandAgricultureAreaAcres(villageSur.getArableLandAgricultureAreaAcres());
+        villageRequest.setForestAreaAcre(villageSur.getForestAreaAcre());
+        villageRequest.setHousingAbadiAreaAcres(villageSur.getHousingAbadiAreaAcres());
+        villageRequest.setAreaUnderWaterBodiesAcres(villageSur.getAreaUnderWaterBodiesAcres());
+        villageRequest.setCommonLandsAreaAcres(villageSur.getCommonLandsAreaAcres());
+        villageRequest.setAveragePerCapitaLandHoldingAcre(villageSur.getAveragePerCapitaLandHoldingAcre());
+        villageRequest.setWasteLandAcres(villageSur.getWasteLandAcres());
+        villageRequest.setWaterTableFeet(villageSur.getWaterTableFeet());
+
+
+// 2.a) Primary Schools (Govt.) located in Village
+        villageRequest.setPrimarySchoolsGovtLocatedInVillage(villageSur.getPrimarySchoolsGovtLocatedInVillage());
+        villageRequest.setPrimarySchoolsGovtNumbersInsideVillage(villageSur.getPrimarySchoolsGovtNumbersInsideVillage());
+        villageRequest.setPrimarySchoolsGovtDistanceOutsideNearestCentre(villageSur.getPrimarySchoolsGovtDistanceOutsideNearestCentre());
+
+// 2.b) Primary Schools (Private) located in village
+        villageRequest.setPrimarySchoolsPrivateLocatedInVillage(villageSur.getPrimarySchoolsPrivateLocatedInVillage());
+        villageRequest.setPrimarySchoolsPrivateNumbersInsideVillage(villageSur.getPrimarySchoolsPrivateNumbersInsideVillage());
+        villageRequest.setPrimarySchoolsPrivateDistanceOutsideNearestCentre(villageSur.getPrimarySchoolsPrivateDistanceOutsideNearestCentre());
+
+// 2.c) Middle Schools (Govt.) located in village
+        villageRequest.setMiddleSchoolsGovtLocatedInVillage(villageSur.getMiddleSchoolsGovtLocatedInVillage());
+        villageRequest.setMiddleSchoolsGovtNumbersInsideVillage(villageSur.getMiddleSchoolsGovtNumbersInsideVillage());
+        villageRequest.setMiddleSchoolsGovtDistanceOutsideNearestCentre(villageSur.getMiddleSchoolsGovtDistanceOutsideNearestCentre());
+
+// 2.d) Middle Schools (Private) located in village
+        villageRequest.setMiddleSchoolsPrivateLocatedInVillage(villageSur.getMiddleSchoolsPrivateLocatedInVillage());
+        villageRequest.setMiddleSchoolsPrivateNumbersInsideVillage(villageSur.getMiddleSchoolsPrivateNumbersInsideVillage());
+        villageRequest.setMiddleSchoolsPrivateDistanceOutsideNearestCentre(villageSur.getMiddleSchoolsPrivateDistanceOutsideNearestCentre());
+
+// 2.e) Secondary Schools (Govt.) located in village
+        villageRequest.setSecondarySchoolsGovtLocatedInVillage(villageSur.getSecondarySchoolsGovtLocatedInVillage());
+        villageRequest.setSecondarySchoolsGovtNumbersInsideVillage(villageSur.getSecondarySchoolsGovtNumbersInsideVillage());
+        villageRequest.setSecondarySchoolsGovtDistanceOutsideNearestCentre(villageSur.getSecondarySchoolsGovtDistanceOutsideNearestCentre());
+
+// 2.f) Secondary Schools (Private) located in village
+        villageRequest.setSecondarySchoolsPrivateLocatedInVillage(villageSur.getSecondarySchoolsPrivateLocatedInVillage());
+        villageRequest.setSecondarySchoolsPrivateNumbersInsideVillage(villageSur.getSecondarySchoolsPrivateNumbersInsideVillage());
+        villageRequest.setSecondarySchoolsPrivateDistanceOutsideNearestCentre(villageSur.getSecondarySchoolsPrivateDistanceOutsideNearestCentre());
+
+// 2.g) ITI Diploma Institutes (Govt.) located in village
+        villageRequest.setItiDiplomaInstitutesGovtLocatedInVillage(villageSur.getItiDiplomaInstitutesGovtLocatedInVillage());
+        villageRequest.setItiDiplomaInstitutesGovtNumbersInsideVillage(villageSur.getItiDiplomaInstitutesGovtNumbersInsideVillage());
+        villageRequest.setItiDiplomaInstitutesGovtDistanceOutsideNearestCentre(villageSur.getItiDiplomaInstitutesGovtDistanceOutsideNearestCentre());
+
+// 2.h) ITI Diploma Institutes (Private) located in village
+        villageRequest.setItiDiplomaInstitutesPrivateLocatedInVillage(villageSur.getItiDiplomaInstitutesPrivateLocatedInVillage());
+        villageRequest.setItiDiplomaInstitutesPrivateNumbersInsideVillage(villageSur.getItiDiplomaInstitutesPrivateNumbersInsideVillage());
+        villageRequest.setItiDiplomaInstitutesPrivateDistanceOutsideNearestCentre(villageSur.getItiDiplomaInstitutesPrivateDistanceOutsideNearestCentre());
+
+// 2.i) Colleges (Govt.) located in village
+        villageRequest.setCollegesGovtLocatedInVillage(villageSur.getCollegesGovtLocatedInVillage());
+        villageRequest.setCollegesGovtNumbersInsideVillage(villageSur.getCollegesGovtNumbersInsideVillage());
+        villageRequest.setCollegesGovtDistanceOutsideNearestCentre(villageSur.getCollegesGovtDistanceOutsideNearestCentre());
+
+// 2.j) Colleges (Private) located in village
+        villageRequest.setCollegesPrivateLocatedInVillage(villageSur.getCollegesPrivateLocatedInVillage());
+        villageRequest.setCollegesPrivateNumbersInsideVillage(villageSur.getCollegesPrivateNumbersInsideVillage());
+        villageRequest.setCollegesPrivateDistanceOutsideNearestCentre(villageSur.getCollegesPrivateDistanceOutsideNearestCentre());
+
+// 2.k) Banks / ATM located in village
+        villageRequest.setBanksAtmLocatedInVillage(villageSur.getBanksAtmLocatedInVillage());
+        villageRequest.setBanksInsideVillageNumbers(villageSur.getBanksInsideVillageNumbers());
+        villageRequest.setAtmInsideVillageNumbers(villageSur.getAtmInsideVillageNumbers());
+        villageRequest.setBanksAtmDistanceOutsideNearestCentre(villageSur.getBanksAtmDistanceOutsideNearestCentre());
+
+// 2.l) Primary Health Centres located in village
+        villageRequest.setPrimaryHealthCentresLocatedInVillage(villageSur.getPrimaryHealthCentresLocatedInVillage());
+        villageRequest.setPrimaryHealthCentresNumbersInsideVillage(villageSur.getPrimaryHealthCentresNumbersInsideVillage());
+        villageRequest.setPrimaryHealthCentresDistanceOutsideNearestCentre(villageSur.getPrimaryHealthCentresDistanceOutsideNearestCentre());
+
+// 2.m) Civil Hospital located in village
+        villageRequest.setCivilHospitalLocatedInVillage(villageSur.getCivilHospitalLocatedInVillage());
+        villageRequest.setCivilHospitalNumbersInsideVillage(villageSur.getCivilHospitalNumbersInsideVillage());
+        villageRequest.setCivilHospitalDistanceOutsideNearestCentre(villageSur.getCivilHospitalDistanceOutsideNearestCentre());
+
+// 2.n) SHG’s in village
+        villageRequest.setShgsInVillage(villageSur.getShgsInVillage());
+        villageRequest.setShgsNumbersInsideVillage(villageSur.getShgsNumbersInsideVillage());
+        villageRequest.setShgsDistanceOutsideNearestCentre(villageSur.getShgsDistanceOutsideNearestCentre());
+
+// 2.o) NGO’s in village
+        villageRequest.setNgosInVillage(villageSur.getNgosInVillage());
+        villageRequest.setNgosNumbersInsideVillage(villageSur.getNgosNumbersInsideVillage());
+        villageRequest.setNgosDistanceOutsideNearestCentre(villageSur.getNgosDistanceOutsideNearestCentre());
+
+// 2.p) Jan Aushadhi Yojana Kendra located in village
+        villageRequest.setJanAushadhiYojanaKendraLocatedInVillage(villageSur.getJanAushadhiYojanaKendraLocatedInVillage());
+        villageRequest.setJanAushadhiYojanaKendraNumbersInsideVillage(villageSur.getJanAushadhiYojanaKendraNumbersInsideVillage());
+        villageRequest.setJanAushadhiYojanaKendraDistanceOutsideNearestCentre(villageSur.getJanAushadhiYojanaKendraDistanceOutsideNearestCentre());
+
+// 2.q) Post Office located in village
+        villageRequest.setPostOfficeLocatedInVillage(villageSur.getPostOfficeLocatedInVillage());
+        villageRequest.setPostOfficeNumbersInsideVillage(villageSur.getPostOfficeNumbersInsideVillage());
+        villageRequest.setPostOfficeDistanceOutsideNearestCentre(villageSur.getPostOfficeDistanceOutsideNearestCentre());
+
+// 2.r) Gas agencies located in village
+        villageRequest.setGasAgenciesLocatedInVillage(villageSur.getGasAgenciesLocatedInVillage());
+        villageRequest.setGasAgenciesNumbersInsideVillage(villageSur.getGasAgenciesNumbersInsideVillage());
+        villageRequest.setGasAgenciesDistanceOutsideNearestCentre(villageSur.getGasAgenciesDistanceOutsideNearestCentre());
+
+// 2.s) Training Centres located in village
+        villageRequest.setTrainingCentresLocatedInVillage(villageSur.getTrainingCentresLocatedInVillage());
+        villageRequest.setTrainingCentresName(villageSur.getTrainingCentresName());
+        villageRequest.setTrainingCentresNumbersInsideVillage(villageSur.getTrainingCentresNumbersInsideVillage());
+        villageRequest.setTrainingCentresDistanceOutsideNearestCentre(villageSur.getTrainingCentresDistanceOutsideNearestCentre());
+
+// 2.t) Electricity Office located in village
+        villageRequest.setElectricityOfficeLocatedInVillage(villageSur.getElectricityOfficeLocatedInVillage());
+        villageRequest.setElectricityOfficeNumbersInsideVillage(villageSur.getElectricityOfficeNumbersInsideVillage());
+        villageRequest.setElectricityOfficeDistanceOutsideNearestCentre(villageSur.getElectricityOfficeDistanceOutsideNearestCentre());
+
+// 2.u) Anganwadi Kendra located in village
+        villageRequest.setAnganwadiKendraLocatedInVillage(villageSur.getAnganwadiKendraLocatedInVillage());
+        villageRequest.setAnganwadiKendraNumbersInsideVillage(villageSur.getAnganwadiKendraNumbersInsideVillage());
+        villageRequest.setAnganwadiKendraDistanceOutsideNearestCentre(villageSur.getAnganwadiKendraDistanceOutsideNearestCentre());
+
+// 2.v) Petrol Pumps in village
+        villageRequest.setPetrolPumpsInVillage(villageSur.getPetrolPumpsInVillage());
+        villageRequest.setPetrolPumpsNumbersInsideVillage(villageSur.getPetrolPumpsNumbersInsideVillage());
+        villageRequest.setPetrolPumpsDistanceOutsideNearestCentre(villageSur.getPetrolPumpsDistanceOutsideNearestCentre());
+
+// 2.w) Kisan Sewa Kendra in village
+        villageRequest.setKisanSewaKendraInVillage(villageSur.getKisanSewaKendraInVillage());
+        villageRequest.setKisanSewaKendraNumbersInsideVillage(villageSur.getKisanSewaKendraNumbersInsideVillage());
+        villageRequest.setKisanSewaKendraDistanceOutsideNearestCentre(villageSur.getKisanSewaKendraDistanceOutsideNearestCentre());
+
+// 2.x) Krishi Mandi in village
+        villageRequest.setKrishiMandiInVillage(villageSur.getKrishiMandiInVillage());
+        villageRequest.setKrishiMandiNumbersInsideVillage(villageSur.getKrishiMandiNumbersInsideVillage());
+        villageRequest.setKrishiMandiDistanceOutsideNearestCentre(villageSur.getKrishiMandiDistanceOutsideNearestCentre());
+
+// 2.y) Fare Price Shop in village
+        villageRequest.setFarePriceShopInVillage(villageSur.getFarePriceShopInVillage());
+        villageRequest.setFarePriceShopNumbersInsideVillage(villageSur.getFarePriceShopNumbersInsideVillage());
+        villageRequest.setFarePriceShopDistanceOutsideNearestCentre(villageSur.getFarePriceShopDistanceOutsideNearestCentre());
+
+// 2.z) Milk Cooperative/Collection Centre in village
+        villageRequest.setMilkCooperativeInVillage(villageSur.getMilkCooperativeInVillage());
+        villageRequest.setMilkCooperativeNumbersInsideVillage(villageSur.getMilkCooperativeNumbersInsideVillage());
+        villageRequest.setMilkCooperativeDistanceOutsideNearestCentre(villageSur.getMilkCooperativeDistanceOutsideNearestCentre());
+
+// 2.aa) Railway Station in village
+        villageRequest.setRailwayStationInVillage(villageSur.getRailwayStationInVillage());
+        villageRequest.setRailwayStationNumbersInsideVillage(villageSur.getRailwayStationNumbersInsideVillage());
+        villageRequest.setRailwayStationDistanceOutsideNearestCentre(villageSur.getRailwayStationDistanceOutsideNearestCentre());
+
+// 2.ab) Bus Stop in village
+        villageRequest.setBusStopInVillage(villageSur.getBusStopInVillage());
+        villageRequest.setBusStopNumbersInsideVillage(villageSur.getBusStopNumbersInsideVillage());
+        villageRequest.setBusStopDistanceOutsideNearestCentre(villageSur.getBusStopDistanceOutsideNearestCentre());
+
+// 2.ac) Veterinary Care Centre in village
+        villageRequest.setVeterinaryCareCentreInVillage(villageSur.getVeterinaryCareCentreInVillage());
+        villageRequest.setVeterinaryCareCentreNumbersInsideVillage(villageSur.getVeterinaryCareCentreNumbersInsideVillage());
+        villageRequest.setVeterinaryCareCentreDistanceOutsideNearestCentre(villageSur.getVeterinaryCareCentreDistanceOutsideNearestCentre());
+
+// 2.ad) Sports Facility/Grounds in village
+        villageRequest.setSportsFacilityInVillage(villageSur.getSportsFacilityInVillage());
+        villageRequest.setSportsFacilityNumbersInsideVillage(villageSur.getSportsFacilityNumbersInsideVillage());
+        villageRequest.setSportsFacilityDistanceOutsideNearestCentre(villageSur.getSportsFacilityDistanceOutsideNearestCentre());
+
+// 2.ae) Number of common sanitation complexes in village
+        villageRequest.setCommonSanitationComplexesInVillage(villageSur.getCommonSanitationComplexesInVillage());
+        villageRequest.setCommonSanitationComplexesNumbersInsideVillage(villageSur.getCommonSanitationComplexesNumbersInsideVillage());
+        villageRequest.setCommonSanitationComplexesDistanceOutsideNearestCentre(villageSur.getCommonSanitationComplexesDistanceOutsideNearestCentre());
+
+// 3. Village Connectivity (Roads)
+// 3.a) Distance of the Village from the nearest Highway/Major Dist. Road (in km)
+        villageRequest.setDistanceFromNearestHighway(villageSur.getDistanceFromNearestHighway());
+
+// 3.b) Is the village connected to the above by a pacca road?
+        villageRequest.setVillageConnectedByPaccaRoad(villageSur.getVillageConnectedByPaccaRoad());
+
+// If yes, details of the Approach Road/Connecting Road
+// 3.b.i) Length of the Road (in km)
+        villageRequest.setPaccaRoadLength(villageSur.getPaccaRoadLength());
+
+// 3.b.ii) Year of construction
+        villageRequest.setPaccaRoadYearOfConstruction(villageSur.getPaccaRoadYearOfConstruction());
+
+// 3.b.iii) Scheme under which constructed
+        villageRequest.setPaccaRoadConstructionScheme(villageSur.getPaccaRoadConstructionScheme());
+
+// 3.b.iv) Present Status (complete/incomplete)
+        villageRequest.setPaccaRoadStatus(villageSur.getPaccaRoadStatus());
+
+// 3.c) Length of Internal roads (inside village/hamlets)
+// i) kachha (kms) ii) pakka (kms) iii) Total (kms)
+        villageRequest.setIntegerernalRoadsKachhaLength(villageSur.getIntegerernalRoadsKachhaLength());
+        villageRequest.setIntegerernalRoadsPakkaLength(villageSur.getIntegerernalRoadsPakkaLength());
+        villageRequest.setIntegerernalRoadsTotalLength(villageSur.getIntegerernalRoadsTotalLength());
+
+// 3.d) What is the mode of transport available?
+        villageRequest.setModeOfTransport(villageSur.getModeOfTransport());
+
+// If any other mode of transport, then specify
+        villageRequest.setOtherModeOfTransport(villageSur.getOtherModeOfTransport());
+
+// 3.e) Frequency of the available mode of transport
+// Frequent Not Frequent only two times a day Any other
+        villageRequest.setTransportFrequency(villageSur.getTransportFrequency());
+        villageRequest.setOtherTransportFrequency(villageSur.getOtherTransportFrequency());
+
+// 4. Land, Forest & Horticultural Profile
+// 4.a) Type of Forest
+        villageRequest.setTypeOfForest(villageSur.getTypeOfForest());
+
+// 4.b) Community Forest (Acre)
+        villageRequest.setCommunityForestAcre(villageSur.getCommunityForestAcre());
+
+// 4.c) Government Forest (Acre)
+        villageRequest.setGovernmentForestAcre(villageSur.getGovernmentForestAcre());
+
+// 4.d) Main Forest Trees and Shrub Species
+        villageRequest.setMainForestTreesAndShrubSpecies(villageSur.getMainForestTreesAndShrubSpecies());
+
+// 4.e) Energy Plantation
+        villageRequest.setEnergyPlantation(villageSur.getEnergyPlantation());
+
+// If Yes, which species (Top 3) and area (in acre)
+        villageRequest.setEnergyPlantationSpeciesTop1(villageSur.getEnergyPlantationSpeciesTop1());
+        villageRequest.setEnergyPlantationAreaTop1(villageSur.getEnergyPlantationAreaTop1());
+        villageRequest.setEnergyPlantationSpeciesTop2(villageSur.getEnergyPlantationSpeciesTop2());
+        villageRequest.setEnergyPlantationAreaTop2(villageSur.getEnergyPlantationAreaTop2());
+        villageRequest.setEnergyPlantationSpeciesTop3(villageSur.getEnergyPlantationSpeciesTop3());
+        villageRequest.setEnergyPlantationAreaTop3(villageSur.getEnergyPlantationAreaTop3());
+
+        villageRequest.setStreetLightCFLLED(villageSur.getStreetLightCFLLED());
+        villageRequest.setStreetLightCFLLEDDuration(villageSur.getStreetLightCFLLEDDuration());
+        villageRequest.setStreetLightTubeLight(villageSur.getStreetLightTubeLight());
+        villageRequest.setStreetLightTubeLightDuration(villageSur.getStreetLightTubeLightDuration());
+
+        villageRequest.setComments(villageSur.getComments());
+
+//5 a
+        PanchayatOffice panchayatOffice = panchayatOfficeRepo.findById(villageSur.getPanchayatOfficeId())
+                .orElseThrow(()->new NotFoundException("Panchayat Not Found with id"+ villageSur.getPanchayatOfficeId()));
+
+        villageRequest.setPanchayatOfficeCflLed(panchayatOffice.getCflLed());
+        villageRequest.setPanchayatOfficeFan(panchayatOffice.getFan());
+        villageRequest.setPanchayatOfficeDesertCooler(panchayatOffice.getDesertCooler());
+        villageRequest.setPanchayatOfficeTv(panchayatOffice.getTv());
+        villageRequest.setPanchayatOfficeRefrigerator(panchayatOffice.getRefrigerator());
+        villageRequest.setPanchayatOfficeMusicSystem(panchayatOffice.getMusicSystem());
+        villageRequest.setPanchayatOfficeElectricMotorPump(panchayatOffice.getElectricMotorPump());
+        villageRequest.setPanchayatOfficeHeater(panchayatOffice.getHeater());
+        villageRequest.setPanchayatOfficeElectricIron(panchayatOffice.getElectricIron());
+        villageRequest.setPanchayatOfficeAirConditioner(panchayatOffice.getAirConditioner());
+
+// Working duration/day (in hours) of Electrical Appliances in Panchayat office
+        villageRequest.setPanchayatOfficeCflLedDuration(panchayatOffice.getCflLedDuration());
+        villageRequest.setPanchayatOfficeFanDuration(panchayatOffice.getFanDuration());
+        villageRequest.setPanchayatOfficeDesertCoolerDuration(panchayatOffice.getDesertCoolerDuration());
+        villageRequest.setPanchayatOfficeTvDuration(panchayatOffice.getTvDuration());
+        villageRequest.setPanchayatOfficeRefrigeratorDuration(panchayatOffice.getRefrigeratorDuration());
+        villageRequest.setPanchayatOfficeMusicSystemDuration(panchayatOffice.getMusicSystemDuration());
+        villageRequest.setPanchayatOfficeElectricMotorPumpDuration(panchayatOffice.getElectricMotorPumpDuration());
+        villageRequest.setPanchayatOfficeHeaterDuration(panchayatOffice.getHeaterDuration());
+        villageRequest.setPanchayatOfficeElectricIronDuration(panchayatOffice.getElectricIronDuration());
+        villageRequest.setPanchayatOfficeAirConditionerDuration(panchayatOffice.getAirConditionerDuration());
+
+
+        Dispensary dispensary = dispensaryRepo.findById(villageSur.getDispensaryId())
+                .orElseThrow(() -> new NotFoundException("Dispensary Not Found with id" + villageSur.getDispensaryId()));
+
+// Set values for Electrical Appliances in Dispensary
+        villageRequest.setDispensaryCflLed(dispensary.getCflLed());
+        villageRequest.setDispensaryFan(dispensary.getFan());
+        villageRequest.setDispensaryDesertCooler(dispensary.getDesertCooler());
+        villageRequest.setDispensaryTv(dispensary.getTv());
+        villageRequest.setDispensaryRefrigerator(dispensary.getRefrigerator());
+        villageRequest.setDispensaryMusicSystem(dispensary.getMusicSystem());
+        villageRequest.setDispensaryElectricMotorPump(dispensary.getElectricMotorPump());
+        villageRequest.setDispensaryHeater(dispensary.getHeater());
+        villageRequest.setDispensaryElectricIron(dispensary.getElectricIron());
+        villageRequest.setDispensaryAirConditioner(dispensary.getAirConditioner());
+
+// Set values for Working duration/day (in hours) of Electrical Appliances in Dispensary
+        villageRequest.setDispensaryCflLedDuration(dispensary.getCflLedDuration());
+        villageRequest.setDispensaryFanDuration(dispensary.getFanDuration());
+        villageRequest.setDispensaryDesertCoolerDuration(dispensary.getDesertCoolerDuration());
+        villageRequest.setDispensaryTvDuration(dispensary.getTvDuration());
+        villageRequest.setDispensaryRefrigeratorDuration(dispensary.getRefrigeratorDuration());
+        villageRequest.setDispensaryMusicSystemDuration(dispensary.getMusicSystemDuration());
+        villageRequest.setDispensaryElectricMotorPumpDuration(dispensary.getElectricMotorPumpDuration());
+        villageRequest.setDispensaryHeaterDuration(dispensary.getHeaterDuration());
+        villageRequest.setDispensaryElectricIronDuration(dispensary.getElectricIronDuration());
+        villageRequest.setDispensaryAirConditionerDuration(dispensary.getAirConditionerDuration());
+
+// Initialize CommunityHall object
+
+        CommunityHall communityHall = communityHallRepo.findById(villageSur.getCommunityHallId())
+                .orElseThrow(() -> new NotFoundException("CommunityHall Not Found with id" + villageSur.getCommunityHallId()));
+
+// Set values for Electrical Appliances in Community Hall
+        villageRequest.setCommunityHallCflLed(communityHall.getCflLed());
+        villageRequest.setCommunityHallFan(communityHall.getFan());
+        villageRequest.setCommunityHallDesertCooler(communityHall.getDesertCooler());
+        villageRequest.setCommunityHallTv(communityHall.getTv());
+        villageRequest.setCommunityHallRefrigerator(communityHall.getRefrigerator());
+        villageRequest.setCommunityHallMusicSystem(communityHall.getMusicSystem());
+        villageRequest.setCommunityHallElectricMotorPump(communityHall.getElectricMotorPump());
+        villageRequest.setCommunityHallHeater(communityHall.getHeater());
+        villageRequest.setCommunityHallElectricIron(communityHall.getElectricIron());
+        villageRequest.setCommunityHallAirConditioner(communityHall.getAirConditioner());
+
+// Set values for Working duration/day (in hours) of Electrical Appliances in Community Hall
+        villageRequest.setCommunityHallCflLedDuration(communityHall.getCflLedDuration());
+        villageRequest.setCommunityHallFanDuration(communityHall.getFanDuration());
+        villageRequest.setCommunityHallDesertCoolerDuration(communityHall.getDesertCoolerDuration());
+        villageRequest.setCommunityHallTvDuration(communityHall.getTvDuration());
+        villageRequest.setCommunityHallRefrigeratorDuration(communityHall.getRefrigeratorDuration());
+        villageRequest.setCommunityHallMusicSystemDuration(communityHall.getMusicSystemDuration());
+        villageRequest.setCommunityHallElectricMotorPumpDuration(communityHall.getElectricMotorPumpDuration());
+        villageRequest.setCommunityHallHeaterDuration(communityHall.getHeaterDuration());
+        villageRequest.setCommunityHallElectricIronDuration(communityHall.getElectricIronDuration());
+        villageRequest.setCommunityHallAirConditionerDuration(communityHall.getAirConditionerDuration());
+
+
+// Initialize Dharamashala object
+        Dharamashala dharamashala = dharamashalaRepo.findById(villageSur.getDharamashalaId())
+                .orElseThrow(() -> new NotFoundException("Dharamashala Not Found with id " + villageSur.getDharamashalaId()));
+
+// Set values for Electrical Appliances in Dharamashala
+        villageRequest.setDharamashalaCflLed(dharamashala.getCflLed());
+        villageRequest.setDharamashalaFan(dharamashala.getFan());
+        villageRequest.setDharamashalaDesertCooler(dharamashala.getDesertCooler());
+        villageRequest.setDharamashalaTv(dharamashala.getTv());
+        villageRequest.setDharamashalaRefrigerator(dharamashala.getRefrigerator());
+        villageRequest.setDharamashalaMusicSystem(dharamashala.getMusicSystem());
+        villageRequest.setDharamashalaElectricMotorPump(dharamashala.getElectricMotorPump());
+        villageRequest.setDharamashalaHeater(dharamashala.getHeater());
+        villageRequest.setDharamashalaElectricIron(dharamashala.getElectricIron());
+        villageRequest.setDharamashalaAirConditioner(dharamashala.getAirConditioner());
+
+// Set values for Working duration/day (in hours) of Electrical Appliances in Dharamashala
+        villageRequest.setDharamashalaCflLedDuration(dharamashala.getCflLedDuration());
+        villageRequest.setDharamashalaFanDuration(dharamashala.getFanDuration());
+        villageRequest.setDharamashalaDesertCoolerDuration(dharamashala.getDesertCoolerDuration());
+        villageRequest.setDharamashalaTvDuration(dharamashala.getTvDuration());
+        villageRequest.setDharamashalaRefrigeratorDuration(dharamashala.getRefrigeratorDuration());
+        villageRequest.setDharamashalaMusicSystemDuration(dharamashala.getMusicSystemDuration());
+        villageRequest.setDharamashalaElectricMotorPumpDuration(dharamashala.getElectricMotorPumpDuration());
+        villageRequest.setDharamashalaHeaterDuration(dharamashala.getHeaterDuration());
+        villageRequest.setDharamashalaElectricIronDuration(dharamashala.getElectricIronDuration());
+        villageRequest.setDharamashalaAirConditionerDuration(dharamashala.getAirConditionerDuration());
+
+
+        // Initialize SocialOrganisations object
+        SocialOrganisations socialOrganisations = socialOrganisationsRepo.findById(villageSur.getSocialOrganisationsId())
+                .orElseThrow(() -> new NotFoundException("Social Orginasation Not Found with id " + villageSur.getSocialOrganisationsId()));
+
+// Set values for Electrical Appliances in Social Organisations
+        villageRequest.setSocialOrganisationsCflLed(socialOrganisations.getCflLed());
+        villageRequest.setSocialOrganisationsFan(socialOrganisations.getFan());
+        villageRequest.setSocialOrganisationsDesertCooler(socialOrganisations.getDesertCooler());
+        villageRequest.setSocialOrganisationsTv(socialOrganisations.getTv());
+        villageRequest.setSocialOrganisationsRefrigerator(socialOrganisations.getRefrigerator());
+        villageRequest.setSocialOrganisationsMusicSystem(socialOrganisations.getMusicSystem());
+        villageRequest.setSocialOrganisationsElectricMotorPump(socialOrganisations.getElectricMotorPump());
+        villageRequest.setSocialOrganisationsHeater(socialOrganisations.getHeater());
+        villageRequest.setSocialOrganisationsElectricIron(socialOrganisations.getElectricIron());
+        villageRequest.setSocialOrganisationsAirConditioner(socialOrganisations.getAirConditioner());
+
+// Set values for Working duration/day (in hours) of Electrical Appliances in Social Organisations
+        villageRequest.setSocialOrganisationsCflLedDuration(socialOrganisations.getCflLedDuration());
+        villageRequest.setSocialOrganisationsFanDuration(socialOrganisations.getFanDuration());
+        villageRequest.setSocialOrganisationsDesertCoolerDuration(socialOrganisations.getDesertCoolerDuration());
+        villageRequest.setSocialOrganisationsTvDuration(socialOrganisations.getTvDuration());
+        villageRequest.setSocialOrganisationsRefrigeratorDuration(socialOrganisations.getRefrigeratorDuration());
+        villageRequest.setSocialOrganisationsMusicSystemDuration(socialOrganisations.getMusicSystemDuration());
+        villageRequest.setSocialOrganisationsElectricMotorPumpDuration(socialOrganisations.getElectricMotorPumpDuration());
+        villageRequest.setSocialOrganisationsHeaterDuration(socialOrganisations.getHeaterDuration());
+        villageRequest.setSocialOrganisationsElectricIronDuration(socialOrganisations.getElectricIronDuration());
+        villageRequest.setSocialOrganisationsAirConditionerDuration(socialOrganisations.getAirConditionerDuration());
+
+        // Initialize TrainingProductionCentres object
+        TrainingProductionCentres trainingProductionCentres = trainingProductionCentresRepo.findById(villageSur.getTPCId())
+                .orElseThrow(() -> new NotFoundException("Training Production Centres Not Found with id " + villageSur.getTPCId()));
+
+// Set values for Electrical Appliances in Training cum Production Centres
+        villageRequest.setTpcCflLed(trainingProductionCentres.getCflLed());
+        villageRequest.setTpcFan(trainingProductionCentres.getFan());
+        villageRequest.setTpcDesertCooler(trainingProductionCentres.getDesertCooler());
+        villageRequest.setTpcTv(trainingProductionCentres.getTv());
+        villageRequest.setTpcRefrigerator(trainingProductionCentres.getRefrigerator());
+        villageRequest.setTpcMusicSystem(trainingProductionCentres.getMusicSystem());
+        villageRequest.setTpcElectricMotorPump(trainingProductionCentres.getElectricMotorPump());
+        villageRequest.setTpcHeater(trainingProductionCentres.getHeater());
+        villageRequest.setTpcElectricIron(trainingProductionCentres.getElectricIron());
+        villageRequest.setTpcAirConditioner(trainingProductionCentres.getAirConditioner());
+
+// Set values for Working duration/day (in hours) of Electrical Appliances in Training cum Production Centres
+        villageRequest.setTpcCflLedDuration(trainingProductionCentres.getCflLedDuration());
+        villageRequest.setTpcFanDuration(trainingProductionCentres.getFanDuration());
+        villageRequest.setTpcDesertCoolerDuration(trainingProductionCentres.getDesertCoolerDuration());
+        villageRequest.setTpcTvDuration(trainingProductionCentres.getTvDuration());
+        villageRequest.setTpcRefrigeratorDuration(trainingProductionCentres.getRefrigeratorDuration());
+        villageRequest.setTpcMusicSystemDuration(trainingProductionCentres.getMusicSystemDuration());
+        villageRequest.setTpcElectricMotorPumpDuration(trainingProductionCentres.getElectricMotorPumpDuration());
+        villageRequest.setTpcHeaterDuration(trainingProductionCentres.getHeaterDuration());
+        villageRequest.setTpcElectricIronDuration(trainingProductionCentres.getElectricIronDuration());
+        villageRequest.setTpcAirConditionerDuration(trainingProductionCentres.getAirConditionerDuration());
+
+        /// Initialize OtherAreas object
+        OtherAreas otherAreas = otherAreasRepo.findById(villageSur.getOtherAreasId())
+                .orElseThrow(() -> new NotFoundException("Other Areas Not Found with id " + villageSur.getOtherAreasId()));
+
+// Set values for Electrical Appliances in Other Areas
+        villageRequest.setOtherAreasCflLed(otherAreas.getCflLed());
+        villageRequest.setOtherAreasFan(otherAreas.getFan());
+        villageRequest.setOtherAreasDesertCooler(otherAreas.getDesertCooler());
+        villageRequest.setOtherAreasTv(otherAreas.getTv());
+        villageRequest.setOtherAreasRefrigerator(otherAreas.getRefrigerator());
+        villageRequest.setOtherAreasMusicSystem(otherAreas.getMusicSystem());
+        villageRequest.setOtherAreasElectricMotorPump(otherAreas.getElectricMotorPump());
+        villageRequest.setOtherAreasHeater(otherAreas.getHeater());
+        villageRequest.setOtherAreasElectricIron(otherAreas.getElectricIron());
+        villageRequest.setOtherAreasAirConditioner(otherAreas.getAirConditioner());
+
+// Set values for Working duration/day (in hours) of Electrical Appliances in Other Areas
+        villageRequest.setOtherAreasCflLedDuration(otherAreas.getCflLedDuration());
+        villageRequest.setOtherAreasFanDuration(otherAreas.getFanDuration());
+        villageRequest.setOtherAreasDesertCoolerDuration(otherAreas.getDesertCoolerDuration());
+        villageRequest.setOtherAreasTvDuration(otherAreas.getTvDuration());
+        villageRequest.setOtherAreasRefrigeratorDuration(otherAreas.getRefrigeratorDuration());
+        villageRequest.setOtherAreasMusicSystemDuration(otherAreas.getMusicSystemDuration());
+        villageRequest.setOtherAreasElectricMotorPumpDuration(otherAreas.getElectricMotorPumpDuration());
+        villageRequest.setOtherAreasHeaterDuration(otherAreas.getHeaterDuration());
+        villageRequest.setOtherAreasElectricIronDuration(otherAreas.getElectricIronDuration());
+        villageRequest.setOtherAreasAirConditionerDuration(otherAreas.getAirConditionerDuration());
+
+        villageRequest.setOtherAreasElectricalAppliances(villageSur.getOtherAreasElectricalAppliances());
+
+
+        return villageRequest;
+    }
+
+    public HouseholdRequest convertHouseholdToDto(HouseholdSurvey householdSurvey) {
+
+        HouseholdRequest householdRequest = new HouseholdRequest();
+
+// Set values for members of the household req DTO
+        householdRequest.setFilledByName(householdSurvey.getFilledByName());
+        householdRequest.setDateOfSurvey(householdSurvey.getDateOfSurvey());
+
+// Set values for General Information
+        householdRequest.setVillage(householdSurvey.getVillage());
+        householdRequest.setGramPanchayat(householdSurvey.getGramPanchayat());
+        householdRequest.setWardNo(householdSurvey.getWardNo());
+        householdRequest.setBlock(householdSurvey.getBlock());
+        householdRequest.setDistrict(householdSurvey.getDistrict());
+        householdRequest.setState(householdSurvey.getState());
+
+// Set values for Respondent’s Profile
+        householdRequest.setRespondentName(householdSurvey.getRespondentName());
+        householdRequest.setGender(householdSurvey.getGender());
+        householdRequest.setAge(householdSurvey.getAge());
+        householdRequest.setRelationshipWithHead(householdSurvey.getRelationshipWithHead());
+        householdRequest.setContactNumber(householdSurvey.getContactNumber());
+
+// Set values for General Household Information
+        householdRequest.setHeadOfHouseholdName(householdSurvey.getHeadOfHouseholdName());
+        householdRequest.setHeadGender(householdSurvey.getHeadGender());
+        householdRequest.setNumberOfFamilyMembers(householdSurvey.getNumberOfFamilyMembers());
+        householdRequest.setCategory(householdSurvey.getCategory());
+        householdRequest.setPovertyStatus(householdSurvey.getPovertyStatus());
+        householdRequest.setOwnHouse(householdSurvey.getOwnHouse());
+        householdRequest.setTypeOfHouse(householdSurvey.getTypeOfHouse());
+        householdRequest.setToilet(householdSurvey.getToilet());
+        householdRequest.setDrainageLinkedToHouse(householdSurvey.getDrainageLinkedToHouse());
+        householdRequest.setWasteCollectionSystem(householdSurvey.getWasteCollectionSystem());
+        householdRequest.setCompostPit(householdSurvey.getCompostPit());
+        householdRequest.setBioGasPlant(householdSurvey.getBioGasPlant());
+
+        for (FamilyMember familyMember : householdSurvey.getMembers()){
+            FamilyMemberReq familyMemberReq = new FamilyMemberReq();
+            familyMemberReq.setAge(familyMember.getAge());
+            familyMemberReq.setGender(familyMember.getGender());
+            familyMemberReq.setEducationLevel(familyMember.getEducationLevel());
+            familyMemberReq.setGoingToAWCSchoolCollege(familyMember.getGoingToAWCSchoolCollege());
+            familyMemberReq.setAadharCard(familyMember.getAadharCard());
+            familyMemberReq.setBankAccount(familyMember.getBankAccount());
+            familyMemberReq.setComputerLiterate(familyMember.getComputerLiterate());
+            familyMemberReq.setSocialSecurityPension(familyMember.getSocialSecurityPension());
+            familyMemberReq.setMajorHealthProblems(familyMember.getMajorHealthProblems());
+            familyMemberReq.setMNREGAJobCard(familyMember.getMNREGAJobCard());
+            familyMemberReq.setInSelfHelpGroups(familyMember.getInSelfHelpGroups());
+            familyMemberReq.setOccupation(familyMember.getOccupation());
+
+
+            householdRequest.getMembers().add(familyMemberReq);
+        }
+
+// 4. Migration Status in a family
+        householdRequest.setFamilyMigratesForWork(householdSurvey.getFamilyMigratesForWork());
+        householdRequest.setNumberOfFamilyMembersMigrated(householdSurvey.getNumberOfFamilyMembersMigrated());
+        householdRequest.setFamilyMigrationDuration(householdSurvey.getFamilyMigrationDuration());
+        householdRequest.setFamilyMigrationYears(householdSurvey.getFamilyMigrationYears());
+
+// 5. Information of Government Schemes
+        householdRequest.setPmJanDhanYojanaBeneficiaryIndividuals(householdSurvey.getPmJanDhanYojanaBeneficiaryIndividuals());
+        householdRequest.setSukanyaSamridhiYojanaBeneficiaryIndividuals(householdSurvey.getSukanyaSamridhiYojanaBeneficiaryIndividuals());
+        householdRequest.setMudraYojanaBeneficiaryIndividuals(householdSurvey.getMudraYojanaBeneficiaryIndividuals());
+        householdRequest.setPmJivanJyotiBimaYojanaBeneficiaryIndividuals(householdSurvey.getPmJivanJyotiBimaYojanaBeneficiaryIndividuals());
+        householdRequest.setPmSurakshaBimaYojanaBeneficiaryIndividuals(householdSurvey.getPmSurakshaBimaYojanaBeneficiaryIndividuals());
+        householdRequest.setAtalPensionYojanaBeneficiaryIndividuals(householdSurvey.getAtalPensionYojanaBeneficiaryIndividuals());
+        householdRequest.setKaushalVikasYojanaBeneficiaryIndividuals(householdSurvey.getKaushalVikasYojanaBeneficiaryIndividuals());
+        householdRequest.setJananiSurakshaYojanaBeneficiaryIndividuals(householdSurvey.getJananiSurakshaYojanaBeneficiaryIndividuals());
+        householdRequest.setFasalBimaYojanaBeneficiaryHousehold(householdSurvey.getFasalBimaYojanaBeneficiaryHousehold());
+        householdRequest.setKisanCreditCardBeneficiaryHousehold(householdSurvey.getKisanCreditCardBeneficiaryHousehold());
+        householdRequest.setKrishiSinchaiYojanaBeneficiaryHousehold(householdSurvey.getKrishiSinchaiYojanaBeneficiaryHousehold());
+        householdRequest.setSwachhBharatMissionToiletBeneficiaryHousehold(householdSurvey.getSwachhBharatMissionToiletBeneficiaryHousehold());
+        householdRequest.setSoilHealthCardBeneficiaryHousehold(householdSurvey.getSoilHealthCardBeneficiaryHousehold());
+        householdRequest.setPmUjjwalaYojanaBeneficiaryHousehold(householdSurvey.getPmUjjwalaYojanaBeneficiaryHousehold());
+        householdRequest.setPmAwasYojanaBeneficiaryHousehold(householdSurvey.getPmAwasYojanaBeneficiaryHousehold());
+
+// 6. Source of Water (Distance from source in km)
+
+        householdRequest.setPipedWaterAtHome(householdSurvey.getPipedWaterAtHome());
+        householdRequest.setDistanceFromPipedWater(householdSurvey.getDistanceFromPipedWater());
+
+        householdRequest.setCommunityWaterTap(householdSurvey.getCommunityWaterTap());
+        householdRequest.setDistanceFromCommunityWaterTap(householdSurvey.getDistanceFromCommunityWaterTap());
+
+        householdRequest.setHandPump(householdSurvey.getHandPump());
+        householdRequest.setPublic_privateHandPump(householdSurvey.getPublic_privateHandPump());
+        householdRequest.setDistanceFromHandPump(householdSurvey.getDistanceFromHandPump());
+
+        householdRequest.setOpenWell(householdSurvey.getOpenWell());
+        householdRequest.setPublic_privateOpenWell(householdSurvey.getPublic_privateOpenWell());
+        householdRequest.setDistanceFromOpenWell(householdSurvey.getDistanceFromOpenWell());
+
+        householdRequest.setCommunityWaterStorage(householdSurvey.getCommunityWaterStorage());
+        householdRequest.setIndividualWaterStorage(householdSurvey.getIndividualWaterStorage());
+
+        householdRequest.setOtherWaterSource(householdSurvey.getOtherWaterSource());
+        householdRequest.setOtherWaterSourceName(householdSurvey.getOtherWaterSourceName());
+        householdRequest.setDistanceFromOtherWaterSource(householdSurvey.getDistanceFromOtherWaterSource());
+
+// 7. Source of Energy and Power
+
+        householdRequest.setElectricityConnectionToHousehold(householdSurvey.getElectricityConnectionToHousehold());
+
+        householdRequest.setElectricityAvailabilityPerDay(householdSurvey.getElectricityAvailabilityPerDay());
+
+        householdRequest.setLightingSource(householdSurvey.getLightingSource());
+        householdRequest.setCookingSource(householdSurvey.getCookingSource());
+        householdRequest.setChullahType(householdSurvey.getChullahType());
+        for (AppliancesUsed appliancesUsed: householdSurvey.getAppliancesAndDuration()){
+            AppliancesUsedReq appliancesUsedReq = new AppliancesUsedReq();
+            appliancesUsedReq.setApplianceDuration(appliancesUsed.getApplianceDuration());
+            appliancesUsedReq.setApplianceName(appliancesUsed.getApplianceName());
+            householdRequest.getAppliancesAndDuration().add(appliancesUsedReq);
+
+        }
+        // 8. Land Details
+        householdRequest.setTotalLand(householdSurvey.getTotalLand());
+        householdRequest.setCultivableArea(householdSurvey.getCultivableArea());
+        householdRequest.setIrrigatedArea(householdSurvey.getIrrigatedArea());
+        householdRequest.setUnirrigatedArea(householdSurvey.getUnirrigatedArea());
+        householdRequest.setBarrenWastelandArea(householdSurvey.getBarrenWastelandArea());
+        householdRequest.setUncultivableArea(householdSurvey.getUncultivableArea());
+
+// 9. Agricultural Inputs
+        householdRequest.setUseChemicalFertilizers(householdSurvey.getUseChemicalFertilizers());
+        householdRequest.setChemicalFertilizersUsage(householdSurvey.getChemicalFertilizersUsage());
+
+        householdRequest.setUseChemicalInsecticides(householdSurvey.getUseChemicalInsecticides());
+        householdRequest.setChemicalInsecticidesUsage(householdSurvey.getChemicalInsecticidesUsage());
+
+        householdRequest.setUseChemicalWeedicide(householdSurvey.getUseChemicalWeedicide());
+        householdRequest.setChemicalWeedicideUsage(householdSurvey.getChemicalWeedicideUsage());
+
+        householdRequest.setUseOrganicManures(householdSurvey.getUseOrganicManures());
+        householdRequest.setOrganicManuresUsage(householdSurvey.getOrganicManuresUsage());
+
+        householdRequest.setIrrigationSource(householdSurvey.getIrrigationSource());
+        householdRequest.setIrrigationSystem(householdSurvey.getIrrigationSystem());
+        for (CropDetails cropDetails: householdSurvey.getCropDetails()){
+            CropDetailsReq cropDetailsReq = new CropDetailsReq();
+            cropDetailsReq.setAreaUnderCrop(cropDetails.getAreaUnderCrop());
+            cropDetailsReq.setCrop(cropDetails.getCrop());
+            cropDetailsReq.setProductivityCrop(cropDetails.getProductivityCrop());
+            householdRequest.getCropDetails().add(cropDetailsReq);
+        }
+        // 11. Livestocks
+        householdRequest.setCows(householdSurvey.getCows());
+        householdRequest.setBuffalos(householdSurvey.getBuffalos());
+        householdRequest.setGoatsSheeps(householdSurvey.getGoatsSheeps());
+        householdRequest.setCalves(householdSurvey.getCalves());
+        householdRequest.setBullocks(householdSurvey.getBullocks());
+        householdRequest.setPoultryDucks(householdSurvey.getPoultryDucks());
+        householdRequest.setOthersLivestock(householdSurvey.getOthersLivestock());
+
+// 11.2 Shelter for Livestock
+        householdRequest.setShelter(householdSurvey.getShelter());
+
+// 11.3 Average Daily Production of Milk (Litres)
+        householdRequest.setAverageDailyMilkProduction(householdSurvey.getAverageDailyMilkProduction());
+
+// 11.4 Animal Waste/Cow Dung (in Kg.)
+        householdRequest.setAnimalWasteCowDung(householdSurvey.getAnimalWasteCowDung());
+
+// 12. Major problems in the village (Top 3)
+        householdRequest.setTopProblem1(householdSurvey.getTopProblem1());
+        householdRequest.setTopProblem2(householdSurvey.getTopProblem2());
+        householdRequest.setTopProblem3(householdSurvey.getTopProblem3());
+
+// Suggestions for Problems
+        householdRequest.setSuggestionsForProblems(householdSurvey.getSuggestionsForProblems());
+
+        return householdRequest;
+    }
+
+    public ByteArrayResource createExcel(String survey)  {
+        try {
+            if (Objects.equals(survey, "village")) {
+                List<VillageSurvey> villageSurveyList = villageSurveyRepo.findAll();
+
+                return villageRequestExcelService.createExcel(villageSurveyList.stream().map(this::convertVillageToDto).toList());
+            } else {
+                List<HouseholdSurvey> householdSurveys = householdSurveyRepo.findAll();
+                return householdSurveyExcelService.createExcel(householdSurveys.stream().map(this::convertHouseholdToDto).toList());
+            }
+        }
+        catch (Exception e){
+            throw new APIException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

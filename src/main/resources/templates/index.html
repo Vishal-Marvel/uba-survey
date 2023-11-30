@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBA Survey</title>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<h1>UBA Survey Report</h1>
+
+<form th:action="@{/api/survey/download}" method="get">
+    <!-- Village Survey Excel Download Button -->
+    <button type="submit" name="survey" value="village">Download Village Survey</button>
+</form>
+
+<form th:action="@{/api/survey/download}" method="get">
+    <!-- Household Survey Excel Download Button -->
+    <button type="submit" name="survey" value="household">Download Household Survey</button>
+</form>
+
+</body>
+</html>
