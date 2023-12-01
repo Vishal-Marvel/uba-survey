@@ -1,6 +1,7 @@
 package uba.survey.ubasurvey.services;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.PropertySource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,10 @@ import uba.survey.ubasurvey.repository.householdSurvey.HouseholdSurveyRepo;
 import uba.survey.ubasurvey.repository.villageSurvey.*;
 
 import java.lang.reflect.Field;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +49,7 @@ public class SurveyServices {
         VillageSurvey villageSurvey = new VillageSurvey();
         villageSurvey.setSurveyorName(villageRequest.getSurveyorName());
         villageSurvey.setRespondentName(villageRequest.getRespondentName());
-        villageSurvey.setDateOfSurvey(villageRequest.getDateOfSurvey());
+        villageSurvey.setDateOfSurvey(new Date());
         villageSurvey.setVillageId(villageRequest.getVillageId());
         villageSurvey.setNameOfTheVillage(villageRequest.getNameOfTheVillage());
         villageSurvey.setGramPanchayat(villageRequest.getGramPanchayat());
@@ -505,7 +508,6 @@ public class SurveyServices {
         return "VillageSurvey object initialized successfully.";
     }
 
-
     public String handleHouseholdSurvey(HouseholdRequest householdRequest) {
         // Assuming householdRequest is an instance of HouseholdRequest
 
@@ -513,7 +515,7 @@ public class SurveyServices {
 
 // Set values for members of the household req DTO
         householdSurvey.setFilledByName(householdRequest.getFilledByName());
-        householdSurvey.setDateOfSurvey(householdRequest.getDateOfSurvey());
+        householdSurvey.setDateOfSurvey(new Date());
 
 // Set values for General Information
         householdSurvey.setVillage(householdRequest.getVillage());
@@ -1182,6 +1184,7 @@ public class SurveyServices {
 
         for (FamilyMember familyMember : householdSurvey.getMembers()){
             FamilyMemberReq familyMemberReq = new FamilyMemberReq();
+            familyMemberReq.setName(familyMember.getName());
             familyMemberReq.setAge(familyMember.getAge());
             familyMemberReq.setGender(familyMember.getGender());
             familyMemberReq.setEducationLevel(familyMember.getEducationLevel());
@@ -1323,11 +1326,14 @@ public class SurveyServices {
     public ByteArrayResource createExcel(String survey)  {
         try {
             if (Objects.equals(survey, "village")) {
-                List<VillageSurvey> villageSurveyList = villageSurveyRepo.findAll();
-
-                return villageRequestExcelService.createExcel(villageSurveyList.stream().map(this::convertVillageToDto).toList());
+                List<VillageSurvey> sortedList = villageSurveyRepo.findAll().stream()
+                        .sorted(Comparator.comparing(VillageSurvey::getDateOfSurvey))
+                        .toList();
+                return villageRequestExcelService.createExcel(sortedList.stream().map(this::convertVillageToDto).toList());
             } else {
-                List<HouseholdSurvey> householdSurveys = householdSurveyRepo.findAll();
+                List<HouseholdSurvey> householdSurveys = householdSurveyRepo.findAll().stream()
+                        .sorted(Comparator.comparing(HouseholdSurvey::getDateOfSurvey))
+                        .toList();
                 return householdSurveyExcelService.createExcel(householdSurveys.stream().map(this::convertHouseholdToDto).toList());
             }
         }

@@ -9,26 +9,32 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
 public class ExcelService<T> {
 
+
     public ByteArrayResource createExcel(List<T> lists) throws IOException {
         Class<?> objClass = lists.get(0).getClass(); // Assuming lists is not empty
         Field[] fields = objClass.getDeclaredFields();
+        int cellIndex, rowIndex;
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(objClass.getSimpleName());
-            int rowIndex = 0;
+            rowIndex = 0;
 
             // Create header row
             addHeader(sheet, rowIndex++, workbook, fields);
 
             // Create data rows
             for (T obj : lists) {
-                Row row = sheet.createRow(rowIndex++);
-                int cellIndex = 0;
+                Row row = sheet.createRow(rowIndex);
+                List<Integer> rows = new ArrayList<>();
+                rows.add(rowIndex);
+                cellIndex = 0;
 
                 for (Field field : fields) {
                     field.setAccessible(true);
@@ -36,19 +42,25 @@ public class ExcelService<T> {
 
                     if (value != null) {
                         if (value instanceof List<?> subList) {
+                            int cell = cellIndex;
+
                             Class<?> subObjClass = subList.get(0).getClass(); // Assuming lists is not empty
                             Field[] subFields = subObjClass.getDeclaredFields();
-                            for (Object subObj : subList) {
-                                for (Field subField : subFields) {
-                                    subField.setAccessible(true);
-                                    Object subValue = subField.get(subObj);
-                                    if (subValue != null) {
-                                        row.createCell(cellIndex++).setCellValue(subValue.toString());
-                                    } else {
-                                        row.createCell(cellIndex++).setCellValue("");
-                                    }
+                            System.out.println("List = " + row.getRowNum() + " " + cellIndex);
+
+                            for (Field subField : subFields) {
+                                subField.setAccessible(true);
+                                Object subValue = subField.get(subList.get(0));
+                                if (subValue != null) {
+                                    row.createCell(cellIndex++).setCellValue(subValue.toString());
+                                } else {
+                                    row.createCell(cellIndex++).setCellValue("");
                                 }
                             }
+                            if (subList.size()>1) {
+                                rows.add(addMultiple(sheet, rowIndex+1, cell, subList.subList(1, subList.size())));
+                            }
+
                         } else {
                             row.createCell(cellIndex++).setCellValue(value.toString());
                         }
@@ -56,7 +68,10 @@ public class ExcelService<T> {
                         row.createCell(cellIndex++).setCellValue("");
                     }
                 }
-
+//                System.out.println("rows+ Collections.max(rows) = " + rows+ Collections.max(rows));
+                rowIndex = Collections.max(rows)+1;
+                
+//                break;
             }
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -67,6 +82,30 @@ public class ExcelService<T> {
             System.out.println("e = " + e);
             throw new IOException("Error creating Excel file", e);
         }
+    }
+
+    private int addMultiple(Sheet sheet, int rowIndex, int colIndex, List<?> subList) throws IllegalAccessException {
+        int cellIndex;
+        Class<?> subObjClass = subList.get(0).getClass(); // Assuming lists is not empty
+        Field[] subFields = subObjClass.getDeclaredFields();
+
+        for (Object subObj : subList) {
+            Row row = sheet.createRow(rowIndex);
+            cellIndex = colIndex;
+            System.out.println("subList = " + row.getRowNum() + " " + cellIndex);
+            for (Field subField : subFields) {
+                subField.setAccessible(true);
+                Object subValue = subField.get(subObj);
+                if (subValue != null) {
+                    row.createCell(cellIndex++).setCellValue(subValue.toString());
+                    System.out.println("rowVal ");
+                } else {
+                    row.createCell(cellIndex++).setCellValue("j");
+                }
+            }
+            rowIndex+=1;
+        }
+        return rowIndex;
     }
 
     private void addHeader(Sheet sheet, int rowIndex, Workbook workbook, Field[] fields) {

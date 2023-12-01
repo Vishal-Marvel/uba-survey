@@ -8,6 +8,7 @@ import uba.survey.ubasurvey.entity.householdSurvey.CropDetails;
 import uba.survey.ubasurvey.entity.householdSurvey.FamilyMember;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -16,7 +17,7 @@ public class HouseholdRequest {
     private String filledByName;
 
     // Date of Survey
-    private String dateOfSurvey;
+    private Date dateOfSurvey;
 
     // General Information
     private String village;

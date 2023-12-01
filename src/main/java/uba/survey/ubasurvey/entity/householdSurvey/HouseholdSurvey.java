@@ -14,7 +14,7 @@ public class HouseholdSurvey {
     private String filledByName;
 
     // Date of Survey
-    private String dateOfSurvey;
+    private Date dateOfSurvey;
 
     // General Information
     private String village;
