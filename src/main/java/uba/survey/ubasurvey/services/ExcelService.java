@@ -46,7 +46,7 @@ public class ExcelService<T> {
 
                             Class<?> subObjClass = subList.get(0).getClass(); // Assuming lists is not empty
                             Field[] subFields = subObjClass.getDeclaredFields();
-                            System.out.println("List = " + row.getRowNum() + " " + cellIndex);
+//                            System.out.println("List = " + row.getRowNum() + " " + cellIndex);
 
                             for (Field subField : subFields) {
                                 subField.setAccessible(true);

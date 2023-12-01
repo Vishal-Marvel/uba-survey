@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AppliancesUsedReq {
     private String applianceName;
-    private String applianceDuration;
+    private Double applianceDuration;
 }

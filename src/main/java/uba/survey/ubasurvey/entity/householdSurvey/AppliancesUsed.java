@@ -12,5 +12,5 @@ public class AppliancesUsed {
     @Id
     private String id = UUID.randomUUID().toString();
     private String applianceName;
-    private String applianceDuration;
+    private Double applianceDuration;
 }

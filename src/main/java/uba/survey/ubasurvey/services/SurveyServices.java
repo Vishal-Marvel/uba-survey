@@ -566,7 +566,6 @@ public class SurveyServices {
             householdSurvey.getMembers().add(familyMember);
 
         }
-
 // 4. Migration Status in a family
         householdSurvey.setFamilyMigratesForWork(householdRequest.getFamilyMigratesForWork());
         householdSurvey.setNumberOfFamilyMembersMigrated(householdRequest.getNumberOfFamilyMembersMigrated());
@@ -1201,6 +1200,9 @@ public class SurveyServices {
 
             householdRequest.getMembers().add(familyMemberReq);
         }
+        householdRequest.setMembers(
+                householdRequest.getMembers().stream().sorted(Comparator.comparing(FamilyMemberReq::getAge)).toList()
+        );
 
 // 4. Migration Status in a family
         householdRequest.setFamilyMigratesForWork(householdSurvey.getFamilyMigratesForWork());
@@ -1327,12 +1329,12 @@ public class SurveyServices {
         try {
             if (Objects.equals(survey, "village")) {
                 List<VillageSurvey> sortedList = villageSurveyRepo.findAll().stream()
-                        .sorted(Comparator.comparing(VillageSurvey::getDateOfSurvey))
+                        .sorted(Comparator.comparing(VillageSurvey::getDateOfSurvey).reversed())
                         .toList();
                 return villageRequestExcelService.createExcel(sortedList.stream().map(this::convertVillageToDto).toList());
             } else {
                 List<HouseholdSurvey> householdSurveys = householdSurveyRepo.findAll().stream()
-                        .sorted(Comparator.comparing(HouseholdSurvey::getDateOfSurvey))
+                        .sorted(Comparator.comparing(HouseholdSurvey::getDateOfSurvey).reversed())
                         .toList();
                 return householdSurveyExcelService.createExcel(householdSurveys.stream().map(this::convertHouseholdToDto).toList());
             }
