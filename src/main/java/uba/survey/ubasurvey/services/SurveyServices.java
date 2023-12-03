@@ -1,6 +1,7 @@
 package uba.survey.ubasurvey.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.util.PropertySource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -1328,10 +1329,11 @@ public class SurveyServices {
     public ByteArrayResource createExcel(String survey)  {
         try {
             if (Objects.equals(survey, "village")) {
-                List<VillageSurvey> sortedList = villageSurveyRepo.findAll().stream()
+                List<VillageSurvey> sorted = villageSurveyRepo.findAll().stream()
                         .sorted(Comparator.comparing(VillageSurvey::getDateOfSurvey).reversed())
                         .toList();
-                return villageRequestExcelService.createExcel(sortedList.stream().map(this::convertVillageToDto).toList());
+
+                return villageRequestExcelService.createExcel(sorted.stream().map(this::convertVillageToDto).toList());
             } else {
                 List<HouseholdSurvey> householdSurveys = householdSurveyRepo.findAll().stream()
                         .sorted(Comparator.comparing(HouseholdSurvey::getDateOfSurvey).reversed())

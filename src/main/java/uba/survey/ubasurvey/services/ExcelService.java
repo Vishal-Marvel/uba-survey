@@ -3,6 +3,7 @@ package uba.survey.ubasurvey.services;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -18,73 +19,86 @@ public class ExcelService<T> {
 
 
     public ByteArrayResource createExcel(List<T> lists) throws IOException {
-        Class<?> objClass = lists.get(0).getClass(); // Assuming lists is not empty
-        Field[] fields = objClass.getDeclaredFields();
-        int cellIndex, rowIndex;
+        if (lists.size()>0) {
+            Class<?> objClass = lists.get(0).getClass(); // Assuming lists is not empty
+            Field[] fields = objClass.getDeclaredFields();
+            int cellIndex, rowIndex;
 
-        try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet(objClass.getSimpleName());
-            rowIndex = 0;
 
-            // Create header row
-            addHeader(sheet, rowIndex++, workbook, fields);
+            try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet(objClass.getSimpleName());
+                rowIndex = 0;
 
-            // Create data rows
-            for (T obj : lists) {
-                Row row = sheet.createRow(rowIndex);
-                List<Integer> rows = new ArrayList<>();
-                rows.add(rowIndex);
-                cellIndex = 0;
+                // Create header row
+                addHeader(sheet, rowIndex++, workbook, fields);
 
-                for (Field field : fields) {
-                    field.setAccessible(true);
-                    Object value = field.get(obj);
+                // Create data rows
+                for (T obj : lists) {
+                    Row row = sheet.createRow(rowIndex);
+                    List<Integer> rows = new ArrayList<>();
+                    rows.add(rowIndex);
+                    cellIndex = 0;
 
-                    if (value != null) {
-                        if (value instanceof List<?> subList) {
-                            int cell = cellIndex;
+                    for (Field field : fields) {
+                        field.setAccessible(true);
 
-                            Class<?> subObjClass = subList.get(0).getClass(); // Assuming lists is not empty
-                            Field[] subFields = subObjClass.getDeclaredFields();
+                        Object value = field.get(obj);
+
+                        if (value != null) {
+                            if (value instanceof List<?> subList) {
+                                int cell = cellIndex;
+
+                                Class<?> subObjClass = subList.get(0).getClass(); // Assuming lists is not empty
+                                Field[] subFields = subObjClass.getDeclaredFields();
 //                            System.out.println("List = " + row.getRowNum() + " " + cellIndex);
 
-                            for (Field subField : subFields) {
-                                subField.setAccessible(true);
-                                Object subValue = subField.get(subList.get(0));
-                                if (subValue != null) {
-                                    row.createCell(cellIndex++).setCellValue(subValue.toString());
-                                } else {
-                                    row.createCell(cellIndex++).setCellValue("");
+                                for (Field subField : subFields) {
+                                    subField.setAccessible(true);
+                                    Object subValue = subField.get(subList.get(0));
+                                    if (subValue != null) {
+                                        row.createCell(cellIndex++).setCellValue(subValue.toString());
+                                    } else {
+                                        row.createCell(cellIndex++).setCellValue("");
+                                    }
                                 }
-                            }
-                            if (subList.size()>1) {
-                                rows.add(addMultiple(sheet, rowIndex+1, cell, subList.subList(1, subList.size())));
-                            }
+                                if (subList.size() > 1) {
+                                    rows.add(addMultiple(sheet, rowIndex, cell, subList.subList(1, subList.size())));
+                                }
 
+                            } else {
+                                row.createCell(cellIndex++).setCellValue(value.toString());
+                            }
                         } else {
-                            row.createCell(cellIndex++).setCellValue(value.toString());
+                            row.createCell(cellIndex++).setCellValue("");
                         }
-                    } else {
-                        row.createCell(cellIndex++).setCellValue("");
-                    }
-                }
-//                System.out.println("rows+ Collections.max(rows) = " + rows+ Collections.max(rows));
-                rowIndex = Collections.max(rows)+1;
-                
-//                break;
-            }
+//                        System.out.println("rows+ Collections.max(rows) = " + rows+ Collections.max(rows));
+                        rowIndex = Collections.max(rows) +1;
 
+                    }
+
+//                break;
+                }
+
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                workbook.write(byteArrayOutputStream);
+                workbook.close();
+                return new ByteArrayResource(byteArrayOutputStream.toByteArray());
+            } catch (Exception e) {
+                System.out.println("e = " + e);
+                throw new IOException("Error creating Excel file", e);
+            }
+        }
+        else{
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            Workbook workbook = new XSSFWorkbook();
+            workbook.createSheet("Empty");
             workbook.write(byteArrayOutputStream);
             workbook.close();
             return new ByteArrayResource(byteArrayOutputStream.toByteArray());
-        } catch (Exception e) {
-            System.out.println("e = " + e);
-            throw new IOException("Error creating Excel file", e);
         }
     }
 
-    private int addMultiple(Sheet sheet, int rowIndex, int colIndex, List<?> subList) throws IllegalAccessException {
+    protected int addMultiple(Sheet sheet,int rowIndex, int colIndex, List<?> subList) throws IllegalAccessException {
         int cellIndex;
         Class<?> subObjClass = subList.get(0).getClass(); // Assuming lists is not empty
         Field[] subFields = subObjClass.getDeclaredFields();
@@ -92,13 +106,13 @@ public class ExcelService<T> {
         for (Object subObj : subList) {
             Row row = sheet.createRow(rowIndex);
             cellIndex = colIndex;
-            System.out.println("subList = " + row.getRowNum() + " " + cellIndex);
+//            System.out.println("subList = " + row.getRowNum() + " " + cellIndex);
             for (Field subField : subFields) {
                 subField.setAccessible(true);
                 Object subValue = subField.get(subObj);
                 if (subValue != null) {
                     row.createCell(cellIndex++).setCellValue(subValue.toString());
-                    System.out.println("rowVal ");
+//                    System.out.println("rowVal ");
                 } else {
                     row.createCell(cellIndex++).setCellValue("j");
                 }

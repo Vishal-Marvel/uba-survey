@@ -39,11 +39,52 @@
         button:hover {
             background-color: #45a049;
         }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .alert {
+            padding: 20px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .closebtn {
+            margin-left: 15px;
+            color: white;
+            font-weight: bold;
+            float: right;
+            font-size: 22px;
+            line-height: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .closebtn:hover {
+            color: black;
+        }
+        .header{
+            width: 98%;
+            justify-content: space-between;
+        }
     </style>
 </head>
 <body>
-
+<div class="header">
+    <img src="sairam-logo.webp">
+    <img src="uba-logo.webp">
+</div>
 <h1>UBA Survey Report</h1>
+
+<!-- Display alert if there's an error -->
+<div th:if="${param.error}" class="alert">
+    <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+    <strong>Error:</strong> ${param.error}
+</div>
+
 
 <form th:action="@{/api/survey/download}" method="get">
     <!-- Village Survey Excel Download Button -->
