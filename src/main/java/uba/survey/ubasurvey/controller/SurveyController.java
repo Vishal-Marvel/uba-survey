@@ -1,6 +1,5 @@
 package uba.survey.ubasurvey.controller;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -9,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uba.survey.ubasurvey.DTO.HouseholdRequest;
 import uba.survey.ubasurvey.DTO.MiscResponse;
-import uba.survey.ubasurvey.DTO.VillageRequest;
+import uba.survey.ubasurvey.DTO.VillageSurveyRequest;
 import uba.survey.ubasurvey.services.SurveyServices;
 
 import java.util.Objects;
@@ -22,8 +21,8 @@ public class SurveyController {
     private final SurveyServices surveyServices;
 
     @PostMapping("/village-survey")
-    public ResponseEntity<MiscResponse> addVillageSurvey(@RequestBody VillageRequest villageRequest){
-        String response = surveyServices.handleVillageSurvey(villageRequest);
+    public ResponseEntity<MiscResponse> addVillageSurvey(@RequestBody VillageSurveyRequest villageSurveyRequest){
+        String response = surveyServices.handleVillageSurvey(villageSurveyRequest);
         return ResponseEntity.ok(MiscResponse.builder().response(response).build());
     }
 

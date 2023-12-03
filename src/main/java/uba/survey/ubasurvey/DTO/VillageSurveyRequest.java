@@ -1,6 +1,5 @@
 package uba.survey.ubasurvey.DTO;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,7 +7,7 @@ import java.util.Date;
 
 @Data
 @NoArgsConstructor
-public class VillageRequest {
+public class VillageSurveyRequest {
     private String surveyorName;
     private String respondentName;
     private Date dateOfSurvey;
