@@ -2,6 +2,7 @@ package uba.survey.ubasurvey.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
@@ -17,6 +18,8 @@ import uba.survey.ubasurvey.repository.householdSurvey.CropDetailsRepo;
 import uba.survey.ubasurvey.repository.householdSurvey.FamilyMemberRepo;
 import uba.survey.ubasurvey.repository.householdSurvey.HouseholdSurveyRepo;
 import uba.survey.ubasurvey.repository.villageSurvey.*;
+import uba.survey.ubasurvey.specifications.HouseholdSurveySpecification;
+import uba.survey.ubasurvey.specifications.VillageSurveySpecification;
 
 import java.util.*;
 import java.util.List;
@@ -1322,16 +1325,23 @@ public class SurveyServices {
         return householdRequest;
     }
 
-    public ByteArrayResource createExcel(String survey)  {
+    public ByteArrayResource createExcel(ExcelQueryObject queryObject)  {
         try {
-            if (Objects.equals(survey, "village")) {
-                List<VillageSurvey> sorted = villageSurveyRepo.findAll().stream()
+            if (Objects.equals(queryObject.getSurvey(), "village")) {
+                Specification<VillageSurvey> specification = VillageSurveySpecification.filterByQueryObject(queryObject);
+                List<VillageSurvey> sorted = villageSurveyRepo
+                        .findAll(specification)
+                        .stream()
                         .sorted(Comparator.comparing(VillageSurvey::getDateOfSurvey).reversed())
                         .toList();
 
                 return villageRequestExcelService.createExcel(sorted.stream().map(this::convertVillageToDto).toList());
             } else {
-                List<HouseholdSurvey> householdSurveys = householdSurveyRepo.findAll().stream()
+                Specification<HouseholdSurvey> specification = HouseholdSurveySpecification.filterByQueryObject(queryObject);
+
+                List<HouseholdSurvey> householdSurveys = householdSurveyRepo
+                        .findAll(specification)
+                        .stream()
                         .sorted(Comparator.comparing(HouseholdSurvey::getDateOfSurvey).reversed())
                         .toList();
                 return householdSurveyExcelService.createExcel(householdSurveys.stream().map(this::convertHouseholdToDto).toList());

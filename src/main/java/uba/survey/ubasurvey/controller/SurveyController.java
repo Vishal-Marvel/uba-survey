@@ -6,11 +6,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import uba.survey.ubasurvey.DTO.ExcelQueryObject;
 import uba.survey.ubasurvey.DTO.HouseholdRequest;
 import uba.survey.ubasurvey.DTO.MiscResponse;
 import uba.survey.ubasurvey.DTO.VillageSurveyRequest;
 import uba.survey.ubasurvey.services.SurveyServices;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -32,13 +35,11 @@ public class SurveyController {
         return ResponseEntity.ok(MiscResponse.builder().response(response).build());
     }
 
-    @GetMapping("/download")
-    public ResponseEntity<Resource> download(
-            @RequestParam(value = "survey") String survey
-    ){
+    @PutMapping("/download")
+    public ResponseEntity<Resource> download(@RequestBody ExcelQueryObject queryObject){
         HttpHeaders headers = new HttpHeaders();
         String fileName;
-        if (Objects.equals(survey, "village")){
+        if (Objects.equals(queryObject.getSurvey(), "village")){
             fileName = "Village.xlsx";
         }else{
             fileName = "HouseHold.xlsx";
@@ -50,7 +51,7 @@ public class SurveyController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(mediaType)
-                .body(surveyServices.createExcel(survey));
+                .body(surveyServices.createExcel(queryObject));
     }
 
 
