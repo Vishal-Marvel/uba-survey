@@ -1351,4 +1351,13 @@ public class SurveyServices {
             throw new APIException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public CountResponse getCount() {
+        List<VillageSurvey> villageSurveys = villageSurveyRepo.findAll();
+        List<HouseholdSurvey> householdSurveys = householdSurveyRepo.findAll();
+        CountResponse countResponse = new CountResponse();
+        countResponse.setHouseholdSurveyCount(householdSurveys.size());
+        countResponse.setVillageSurveyCount(villageSurveys.size());
+        return countResponse;
+    }
 }

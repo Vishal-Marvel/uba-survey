@@ -68,7 +68,7 @@ public class ExcelService<T> {
 
                                 Cell cell = row.createCell(cellIndex++);
                                 cell.setHyperlink(hyperlink);
-                                cell.setCellValue(field.getName());
+                                cell.setCellValue(field.getName()+ " (" + ((List<?>) value).size() + ")");
                                 cell.setCellStyle(linkStyle);
 
 

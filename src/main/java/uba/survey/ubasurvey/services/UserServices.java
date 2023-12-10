@@ -27,7 +27,7 @@ public class UserServices {
     public String createUser(CreateUserReq createUserReq){
         User user = new User();
         user.setUserName(createUserReq.getUserName());
-        user.setRole(UserRole.valueOf(createUserReq.getRole()));
+        user.setRole(UserRole.ROLE_USER);
         user.setPassword(passwordEncoder.encode(createUserReq.getPassword()));
         user.setEmail(createUserReq.getEmail());
         userRepo.save(user);

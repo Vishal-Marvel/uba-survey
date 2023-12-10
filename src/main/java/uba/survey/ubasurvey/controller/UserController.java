@@ -1,5 +1,6 @@
 package uba.survey.ubasurvey.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.persistence.Id;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import uba.survey.ubasurvey.services.UserServices;
 public class UserController {
     private final UserServices userServices;
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/create")
     public ResponseEntity<MiscResponse> createUesr(@RequestBody CreateUserReq createUserReq){
         String response = userServices.createUser(createUserReq);

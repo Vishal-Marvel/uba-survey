@@ -1,19 +1,16 @@
 package uba.survey.ubasurvey.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import uba.survey.ubasurvey.DTO.ExcelQueryObject;
-import uba.survey.ubasurvey.DTO.HouseholdRequest;
-import uba.survey.ubasurvey.DTO.MiscResponse;
-import uba.survey.ubasurvey.DTO.VillageSurveyRequest;
+import uba.survey.ubasurvey.DTO.*;
 import uba.survey.ubasurvey.services.SurveyServices;
 
-import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -35,7 +32,14 @@ public class SurveyController {
         return ResponseEntity.ok(MiscResponse.builder().response(response).build());
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<CountResponse> getSurveysCount(){
+        return ResponseEntity.ok(surveyServices.getCount());
+    }
+
     @PutMapping("/download")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Resource> download(@RequestBody ExcelQueryObject queryObject){
         HttpHeaders headers = new HttpHeaders();
         String fileName;
