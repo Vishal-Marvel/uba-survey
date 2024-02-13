@@ -17,8 +17,7 @@ import uba.survey.ubasurvey.services.UserServices;
 @RequiredArgsConstructor
 public class UserController {
     private final UserServices userServices;
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @SecurityRequirement(name = "Bearer Authentication")
+
     @PostMapping("/create")
     public ResponseEntity<MiscResponse> createUesr(@RequestBody CreateUserReq createUserReq){
         String response = userServices.createUser(createUserReq);

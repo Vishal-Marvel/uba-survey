@@ -8,8 +8,7 @@ import java.util.List;
 @Data
 public class ExcelQueryObject {
     private String survey;
-    private List<String> surveyorNames;
-    private Date fromDate;
-    private Date toDate;
-    private List<String> villages;
+    private String surveyId;
+    private Integer year;
+    private String village;
 }

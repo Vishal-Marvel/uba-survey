@@ -12,6 +12,7 @@ import uba.survey.ubasurvey.entity.Village;
 import uba.survey.ubasurvey.repository.VillageRepo;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,7 +22,7 @@ public class VillageController {
 
     @PreAuthorize("hasRole('ROLE_USER')")
     @SecurityRequirement(name = "Bearer Authentication")
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<MiscResponse> addVillage(@RequestBody VillageAddRequest villageAddRequest){
         Village village = new Village();
         village.setVillageName(villageAddRequest.getVillageName());
@@ -29,11 +30,11 @@ public class VillageController {
         return ResponseEntity.ok(MiscResponse.builder().response("Village Added").build());
     }
 
-    @GetMapping("/list")
+    @GetMapping
     public ResponseEntity<VillageListResponse> getVillages(){
         List<Village> villageList = villageRepo.findAll();
         VillageListResponse response = new VillageListResponse();
-        response.setVillages(villageList.stream().map(Village::getVillageName).toList());
+        response.setVillages(villageList.stream().collect(Collectors.toMap(Village::getId, Village::getVillageName)));
         return ResponseEntity.ok(response);
     }
 
