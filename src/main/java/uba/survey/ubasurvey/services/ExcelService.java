@@ -7,7 +7,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import uba.survey.ubasurvey.DTO.ExcelDTO;
 import uba.survey.ubasurvey.DTO.ExcelFieldObject;
-import uba.survey.ubasurvey.DTO.FieldResponse;
+import uba.survey.ubasurvey.DTO.FieldResponseDTO;
 import uba.survey.ubasurvey.DTO.SectionResponse;
 
 import java.io.ByteArrayOutputStream;
@@ -50,9 +50,9 @@ public class ExcelService {
 
 
                     for (SectionResponse sectionResponse : excelDTO.getFieldData().getSections()) {
-                        for (FieldResponse fieldResponse : sectionResponse.getFields()) {
+                        for (FieldResponseDTO fieldResponseDTO : sectionResponse.getFields()) {
 
-                            cellIndex = addFields(excelDTO, response, fieldResponse, workbook, rowIndex,row, cellIndex, linkStyle);
+                            cellIndex = addFields(excelDTO, response, fieldResponseDTO, workbook, rowIndex,row, cellIndex, linkStyle);
                         }
                     }
                     rowIndex++;
@@ -85,15 +85,15 @@ public class ExcelService {
         }
     }
 
-    private Integer addFields(ExcelDTO excelDTO, String response, FieldResponse fieldResponse, Workbook workbook, Integer rowIndex, Row row, Integer cellIndex, CellStyle linkStyle){
-        List<ExcelFieldObject> value = excelDTO.getFieldDatas().stream().filter((excelFieldObject -> Objects.equals(excelFieldObject.getResponseId(), response) && Objects.equals(excelFieldObject.getFieldId(), fieldResponse.getId()))).toList();
+    private Integer addFields(ExcelDTO excelDTO, String response, FieldResponseDTO fieldResponseDTO, Workbook workbook, Integer rowIndex, Row row, Integer cellIndex, CellStyle linkStyle){
+        List<ExcelFieldObject> value = excelDTO.getFieldDatas().stream().filter((excelFieldObject -> Objects.equals(excelFieldObject.getResponseId(), response) && Objects.equals(excelFieldObject.getFieldId(), fieldResponseDTO.getId()))).toList();
 
         if (!value.isEmpty()) {
             ExcelFieldObject object = value.get(0);
-            if (Objects.equals(fieldResponse.getFieldType(), "COUNTER")) {
-                Sheet listSheet = workbook.getSheet(fieldResponse.getQuestion());
+            if (Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER")) {
+                Sheet listSheet = workbook.getSheet(fieldResponseDTO.getQuestion());
                 if (listSheet == null) {
-                    listSheet = workbook.createSheet(fieldResponse.getQuestion());
+                    listSheet = workbook.createSheet(fieldResponseDTO.getQuestion());
                     sheetIntegerHashMap.put(listSheet, 0);
                 }
                 Hyperlink hyperlink = workbook.getCreationHelper().createHyperlink(HyperlinkType.DOCUMENT);
@@ -104,15 +104,15 @@ public class ExcelService {
                 cell.setCellValue(Integer.parseInt(object.getAnswers().get(0)));
                 cell.setCellStyle(linkStyle);
 
-                sheetIntegerHashMap.put(listSheet, addListSheet(excelDTO, response, listSheet, Integer.parseInt(object.getAnswers().get(0)), fieldResponse.getSubfields(), sheetIntegerHashMap.get(listSheet), rowIndex, linkStyle));
+                sheetIntegerHashMap.put(listSheet, addListSheet(excelDTO, response, listSheet, Integer.parseInt(object.getAnswers().get(0)), fieldResponseDTO.getSubfields(), sheetIntegerHashMap.get(listSheet), rowIndex, linkStyle));
 //                                System.out.println("sublist" );
 
             } else {
-                if (Objects.equals(fieldResponse.getFieldType(), "INTEGER") || Objects.equals(fieldResponse.getFieldType(), "COUNTER")) {
+                if (Objects.equals(fieldResponseDTO.getFieldType(), "INTEGER") || Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER")) {
                     row.createCell(cellIndex++).setCellValue(Integer.parseInt(object.getAnswers().get(0)));
-                } else if (Objects.equals(fieldResponse.getFieldType(), "DATE")) {
+                } else if (Objects.equals(fieldResponseDTO.getFieldType(), "DATE")) {
                     row.createCell(cellIndex++).setCellValue(dateFormat.format(object.getAnswers().get(0)));
-                } else if (Objects.equals(fieldResponse.getFieldType(), "MSQ")){
+                } else if (Objects.equals(fieldResponseDTO.getFieldType(), "MSQ")){
                     row.createCell(cellIndex++).setCellValue(String.join(", ", object.getAnswers()));
                 }else {
                     row.createCell(cellIndex++).setCellValue(object.getAnswers().get(0));
@@ -122,23 +122,23 @@ public class ExcelService {
             row.createCell(cellIndex++).setCellValue("");
 
         }
-        if (fieldResponse.getYESField()!=null){
-            cellIndex = addFields(excelDTO, response, fieldResponse.getYESField(), workbook, rowIndex,row, cellIndex, linkStyle);
+        if (fieldResponseDTO.getYESField()!=null){
+            cellIndex = addFields(excelDTO, response, fieldResponseDTO.getYESField(), workbook, rowIndex,row, cellIndex, linkStyle);
 
         }
-        if (fieldResponse.getNoField()!=null) {
-            cellIndex = addFields(excelDTO, response, fieldResponse.getNoField(), workbook, rowIndex,row, cellIndex, linkStyle);
+        if (fieldResponseDTO.getNoField()!=null) {
+            cellIndex = addFields(excelDTO, response, fieldResponseDTO.getNoField(), workbook, rowIndex,row, cellIndex, linkStyle);
 
         }
-        if (!Objects.equals(fieldResponse.getFieldType(), "COUNTER") && fieldResponse.getSubfields() != null && fieldResponse.getSubfields().size()>0) {
-            for (FieldResponse subFieldResponse : fieldResponse.getSubfields()) {
-                cellIndex = addFields(excelDTO, response, subFieldResponse, workbook, rowIndex,row, cellIndex, linkStyle);
+        if (!Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER") && fieldResponseDTO.getSubfields() != null && fieldResponseDTO.getSubfields().size()>0) {
+            for (FieldResponseDTO subFieldResponseDTO : fieldResponseDTO.getSubfields()) {
+                cellIndex = addFields(excelDTO, response, subFieldResponseDTO, workbook, rowIndex,row, cellIndex, linkStyle);
             }
         }
         return  cellIndex;
     }
 
-    private Integer addListSheet(ExcelDTO excelDTO, String response, Sheet listSheet,Integer count, List<FieldResponse> fieldResponses, Integer rowIndex, Integer surveyNo, CellStyle linkStyle) {
+    private Integer addListSheet(ExcelDTO excelDTO, String response, Sheet listSheet, Integer count, List<FieldResponseDTO> fieldResponsDTOS, Integer rowIndex, Integer surveyNo, CellStyle linkStyle) {
         if (rowIndex == 0) {
             Row headerRow = listSheet.createRow(rowIndex);
             CellStyle headerCellStyle = listSheet.getWorkbook().createCellStyle();
@@ -156,7 +156,7 @@ public class ExcelService {
             cell.setCellValue("S. No. ");
             cellIndex++;
 
-            for (FieldResponse subField : fieldResponses) {
+            for (FieldResponseDTO subField : fieldResponsDTOS) {
                 cellIndex = addHeaderSubFields(headerRow, cellIndex, subField, headerCellStyle);
             }
         }
@@ -177,14 +177,14 @@ public class ExcelService {
             cell.setCellValue((Integer)i-rowIndex+1);
 
 
-            for (FieldResponse subField : fieldResponses) {
+            for (FieldResponseDTO subField : fieldResponsDTOS) {
                 cellIndex = addListSheetSubFields(excelDTO, response, subField, i, rowIndex, row, cellIndex);
             }
         }
         return i;
     }
 
-    private Integer addListSheetSubFields(ExcelDTO excelDTO, String response, FieldResponse subField, Integer finalI, Integer rowIndex, Row row, Integer cellIndex){
+    private Integer addListSheetSubFields(ExcelDTO excelDTO, String response, FieldResponseDTO subField, Integer finalI, Integer rowIndex, Row row, Integer cellIndex){
         List<ExcelFieldObject> subValue = excelDTO.getFieldDatas().stream().filter((excelFieldObject) ->
                 Objects.equals(excelFieldObject.getResponseId(), response) && Objects.equals(excelFieldObject.getFieldId(), subField.getId()) && excelFieldObject.getCounter()==finalI-rowIndex).toList();
         if (!subValue.isEmpty()) {
@@ -210,8 +210,8 @@ public class ExcelService {
 
         }
         if (!Objects.equals(subField.getFieldType(), "COUNTER") && subField.getSubfields() != null && subField.getSubfields().size()>0) {
-            for (FieldResponse subFieldResponse : subField.getSubfields()) {
-                cellIndex = addListSheetSubFields(excelDTO, response, subFieldResponse, finalI, rowIndex, row, cellIndex);
+            for (FieldResponseDTO subFieldResponseDTO : subField.getSubfields()) {
+                cellIndex = addListSheetSubFields(excelDTO, response, subFieldResponseDTO, finalI, rowIndex, row, cellIndex);
             }
         }
 
@@ -233,27 +233,27 @@ public class ExcelService {
         cellIndex++;
 
         for (SectionResponse sectionResponse : sectionResponses) {
-            for (FieldResponse fieldResponse : sectionResponse.getFields()) {
-                cellIndex = addHeaderSubFields(headerRow, cellIndex, fieldResponse, headerCellStyle);
+            for (FieldResponseDTO fieldResponseDTO : sectionResponse.getFields()) {
+                cellIndex = addHeaderSubFields(headerRow, cellIndex, fieldResponseDTO, headerCellStyle);
             }
         }
     }
 
-    private Integer addHeaderSubFields(Row headerRow, int cellIndex, FieldResponse fieldResponse, CellStyle headerCellStyle) {
+    private Integer addHeaderSubFields(Row headerRow, int cellIndex, FieldResponseDTO fieldResponseDTO, CellStyle headerCellStyle) {
 
         Cell cell = headerRow.createCell(cellIndex);
         cell.setCellStyle(headerCellStyle);
-        cell.setCellValue(fieldResponse.getQuestion());
+        cell.setCellValue(fieldResponseDTO.getQuestion());
         cellIndex++;
-        if (fieldResponse.getYESField() != null) {
-            cellIndex = addHeaderSubFields(headerRow, cellIndex, fieldResponse.getYESField(), headerCellStyle);
+        if (fieldResponseDTO.getYESField() != null) {
+            cellIndex = addHeaderSubFields(headerRow, cellIndex, fieldResponseDTO.getYESField(), headerCellStyle);
         }
-        if (fieldResponse.getNoField() != null) {
-            cellIndex = addHeaderSubFields(headerRow, cellIndex, fieldResponse.getNoField(), headerCellStyle);
+        if (fieldResponseDTO.getNoField() != null) {
+            cellIndex = addHeaderSubFields(headerRow, cellIndex, fieldResponseDTO.getNoField(), headerCellStyle);
         }
-        if (!Objects.equals(fieldResponse.getFieldType(), "COUNTER") && fieldResponse.getSubfields() != null && fieldResponse.getSubfields().size()>0) {
-            for (FieldResponse subFieldResponse : fieldResponse.getSubfields()) {
-                cellIndex = addHeaderSubFields(headerRow, cellIndex, subFieldResponse, headerCellStyle);
+        if (!Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER") && fieldResponseDTO.getSubfields() != null && fieldResponseDTO.getSubfields().size()>0) {
+            for (FieldResponseDTO subFieldResponseDTO : fieldResponseDTO.getSubfields()) {
+                cellIndex = addHeaderSubFields(headerRow, cellIndex, subFieldResponseDTO, headerCellStyle);
             }
         }
 

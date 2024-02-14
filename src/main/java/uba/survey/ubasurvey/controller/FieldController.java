@@ -6,13 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uba.survey.ubasurvey.DTO.AddFieldRequest;
-import uba.survey.ubasurvey.DTO.FieldResponse;
 import uba.survey.ubasurvey.DTO.MiscResponse;
 import uba.survey.ubasurvey.DTO.SurveyQuestionResponse;
 import uba.survey.ubasurvey.services.FieldService;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 @RestController

@@ -62,15 +62,15 @@ public class SurveyServices {
             );
             SurveyQuestionResponse surveyQuestionResponse = fieldService.getFields(survey.getId());
             SectionResponse generalSection = SectionResponse.builder()
-                    .sectionName("General")
+                    .sectionName("Meta Data")
                     .fields(
                             List.of(
-                                    FieldResponse.builder()
+                                    FieldResponseDTO.builder()
                                             .id("date")
                                             .fieldType("STRING")
                                             .question("Date")
                                             .build()
-                                    , FieldResponse.builder()
+                                    , FieldResponseDTO.builder()
                                             .fieldType("STRING")
                                             .id("username")
                                             .question("Sureveyor Name")

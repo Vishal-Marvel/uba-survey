@@ -13,5 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 public class SectionResponse {
     private String sectionName;
-    private List<FieldResponse> fields;
+    private String sectionId;
+    private List<FieldResponseDTO> fields;
 }

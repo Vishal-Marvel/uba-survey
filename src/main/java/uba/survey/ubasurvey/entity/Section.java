@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -14,6 +15,7 @@ public class Section {
     @Id
     private String id = UUID.randomUUID().toString();
     private String sectionName;
+    private Date date = new Date();
 
     @OneToMany(cascade = CascadeType.ALL)
     private Set<Field> fields = new HashSet<>();

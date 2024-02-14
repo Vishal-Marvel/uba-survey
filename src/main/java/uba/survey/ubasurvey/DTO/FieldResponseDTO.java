@@ -11,14 +11,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FieldResponse {
+public class FieldResponseDTO {
     private String id;
     private String question;
     private List<String> options;
     private String fieldType;
-    private List<FieldResponse> subfields;
-    private FieldResponse YESField;
-    private FieldResponse NoField;
+    private List<FieldResponseDTO> subfields;
+    private FieldResponseDTO YESField;
+    private FieldResponseDTO NoField;
     private byte[] image;
 
 }

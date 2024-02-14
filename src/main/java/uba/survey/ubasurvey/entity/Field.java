@@ -14,6 +14,7 @@ public class Field {
     private String id = UUID.randomUUID().toString();
     private String fieldType;
     private String question;
+    private Date date = new Date();
     @OneToMany(cascade = CascadeType.ALL)
     private Set<AnswerOption> answerOptions = new HashSet<>();
 

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import uba.survey.ubasurvey.DTO.AddFieldRequest;
-import uba.survey.ubasurvey.DTO.FieldResponse;
+import uba.survey.ubasurvey.DTO.FieldResponseDTO;
 import uba.survey.ubasurvey.DTO.SectionResponse;
 import uba.survey.ubasurvey.DTO.SurveyQuestionResponse;
 import uba.survey.ubasurvey.entity.AnswerOption;
@@ -39,6 +39,8 @@ public class FieldService {
         Section section = sectionRepo.findById(addFieldRequest.getSection()).orElseThrow(() -> new NotFoundException("Section With id " + addFieldRequest.getSection() +
                 " Not Found"));
         field.setSection(section);
+        field = fieldRepo.save(field);
+
         Set<Field> sectionFields = section.getFields();
         sectionFields.add(field);
         sectionRepo.save(section);
@@ -46,16 +48,18 @@ public class FieldService {
             field.setImage(imageService.compressImages(addFieldRequest.getImage()));
         }
         if (Objects.equals(addFieldRequest.getFieldType(), "DROPDOWN") && addFieldRequest.getOptions().size() > 0) {
+            Set<AnswerOption> answerOptions = new HashSet<>();
+
             for (String optionName : addFieldRequest.getOptions()) {
                 AnswerOption answerOption = new AnswerOption();
                 answerOption.setOptionName(optionName);
                 answerOption.setField(field);
-                optionRepo.save(answerOption);
-                Set<AnswerOption> answerOptions = field.getAnswerOptions();
+                answerOption = optionRepo.save(answerOption);
                 answerOptions.add(answerOption);
-                field.setAnswerOptions(answerOptions);
 
             }
+            field.setAnswerOptions(answerOptions);
+
         }
         if (addFieldRequest.getParentField() != null) {
             Field parentField = fieldRepo.findById(addFieldRequest.getParentField()).orElseThrow(() -> new NotFoundException("Field With id " + addFieldRequest.getParentField() +
@@ -89,17 +93,22 @@ public class FieldService {
             yesField.setQuestion(addFieldRequest.getYES_question());
             yesField.setFieldType(addFieldRequest.getYES_fieldType());
             yesField.setSection(section);
+            yesField = fieldRepo.save(yesField);
+
+
             if (Objects.equals(addFieldRequest.getYES_fieldType(), "DROPDOWN") && addFieldRequest.getYES_options().size() > 0) {
+                Set<AnswerOption> answerOptions = new HashSet<>();
+
                 for (String optionName : addFieldRequest.getYES_options()) {
                     AnswerOption answerOption = new AnswerOption();
                     answerOption.setOptionName(optionName);
                     answerOption.setField(yesField);
                     optionRepo.save(answerOption);
-                    Set<AnswerOption> answerOptions = yesField.getAnswerOptions();
                     answerOptions.add(answerOption);
-                    yesField.setAnswerOptions(answerOptions);
 
                 }
+                yesField.setAnswerOptions(answerOptions);
+
             }
 
             if (addFieldRequest.getYES_image() != null) {
@@ -116,17 +125,21 @@ public class FieldService {
             noField.setQuestion(addFieldRequest.getNO_question());
             noField.setFieldType(addFieldRequest.getNO_fieldType());
             noField.setSection(section);
+            noField = fieldRepo.save(noField);
+
             if (Objects.equals(addFieldRequest.getNO_fieldType(), "DROPDOWN") && addFieldRequest.getNO_options().size() > 0) {
+                Set<AnswerOption> answerOptions = new HashSet<>();
+
                 for (String optionName : addFieldRequest.getNO_options()) {
                     AnswerOption answerOption = new AnswerOption();
                     answerOption.setOptionName(optionName);
                     answerOption.setField(noField);
                     optionRepo.save(answerOption);
-                    Set<AnswerOption> answerOptions = noField.getAnswerOptions();
                     answerOptions.add(answerOption);
-                    noField.setAnswerOptions(answerOptions);
 
                 }
+                noField.setAnswerOptions(answerOptions);
+
             }
 
             if (addFieldRequest.getNO_image() != null) {
@@ -143,26 +156,28 @@ public class FieldService {
     public SurveyQuestionResponse getFields(String surveyId) {
         Survey survey = surveyRepo.findById(surveyId).orElseThrow(() -> new NotFoundException("Survey With id " + surveyId +
                 " Not Found"));
-        List<Section> sections = sectionRepo.findAllBySurvey(survey);
+        List<Section> sections = sectionRepo.findAllBySurvey(survey).stream().sorted(Comparator.comparing(Section::getDate))
+                .toList();
         SurveyQuestionResponse response = new SurveyQuestionResponse();
         response.setSurveyName(survey.getSurveyName());
         response.setSurveyId(surveyId);
         List<SectionResponse> sectionResponseList = new ArrayList<>();
         for (Section section : sections) {
 
-            Set<Field> sectionFields = section.getFields();
-            List<FieldResponse> fieldResponseList = new ArrayList<>();
+            Set<Field> sectionFields = section.getFields().stream().sorted(Comparator.comparing(Field::getDate)).collect(Collectors.toCollection(LinkedHashSet::new));
+            List<FieldResponseDTO> fieldResponseDTOList = new ArrayList<>();
             for (Field field : sectionFields) {
                 if (field.getParentField() == null) {
-                    FieldResponse fieldResponse = setResponse(field);
-                    fieldResponse.setSubfields(field.getSubFields().stream().map(this::setResponse).toList());
-                    fieldResponseList.add(fieldResponse);
+                    FieldResponseDTO fieldResponseDTO = setResponseDTO(field);
+                    fieldResponseDTO.setSubfields(field.getSubFields().stream().sorted(Comparator.comparing(Field::getDate)).map(this::setResponseDTO).toList());
+                    fieldResponseDTOList.add(fieldResponseDTO);
                 }
 
             }
             sectionResponseList.add(SectionResponse.builder()
-                    .fields(fieldResponseList)
+                    .fields(fieldResponseDTOList)
                     .sectionName(section.getSectionName())
+                    .sectionId(section.getId())
                     .build());
         }
         response.setSections(sectionResponseList);
@@ -170,16 +185,16 @@ public class FieldService {
         return response;
     }
 
-    private FieldResponse setResponse(Field field) {
-        FieldResponse response = new FieldResponse();
+    private FieldResponseDTO setResponseDTO(Field field) {
+        FieldResponseDTO response = new FieldResponseDTO();
         response.setId(field.getId());
         response.setImage(field.getImage());
         response.setQuestion(field.getQuestion());
         response.setOptions(field.getAnswerOptions().stream().map(AnswerOption::getOptionName).toList());
         response.setFieldType(field.getFieldType());
         if (field.getYesField() != null) {
-            response.setYESField(FieldResponse.builder()
-                    .subfields(field.getYesField().getSubFields() != null ? field.getYesField().getSubFields().stream().map(this::setResponse).toList() : null)
+            response.setYESField(FieldResponseDTO.builder()
+                    .subfields(field.getYesField().getSubFields() != null ? field.getYesField().getSubFields().stream().sorted(Comparator.comparing(Field::getDate)).map(this::setResponseDTO).toList() : null)
                     .id(field.getYesField().getId())
                     .question(field.getYesField().getQuestion())
                     .fieldType(field.getYesField().getFieldType())
@@ -188,9 +203,9 @@ public class FieldService {
                     .build());
         }
         if (field.getNoField() != null) {
-            response.setNoField(FieldResponse.builder()
+            response.setNoField(FieldResponseDTO.builder()
                     .id(field.getNoField().getId())
-                    .subfields(field.getNoField().getSubFields() != null ? field.getNoField().getSubFields().stream().map(this::setResponse).toList() : null)
+                    .subfields(field.getNoField().getSubFields() != null ? field.getNoField().getSubFields().stream().sorted(Comparator.comparing(Field::getDate)).map(this::setResponseDTO).toList() : null)
                     .question(field.getNoField().getQuestion())
                     .fieldType(field.getNoField().getFieldType())
                     .image(field.getNoField().getImage())
