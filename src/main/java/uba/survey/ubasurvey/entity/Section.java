@@ -23,9 +23,10 @@ public class Section {
     @OneToMany(cascade = CascadeType.ALL)
     private Set<ResponseRecord> responseRecords = new HashSet<>();
 
-
     @ManyToOne
     private Survey survey;
+
+    private Boolean isActive=true;
 
     @Override
     public int hashCode() {

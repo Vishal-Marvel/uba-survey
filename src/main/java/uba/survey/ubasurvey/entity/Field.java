@@ -15,6 +15,7 @@ public class Field {
     private String fieldType;
     private String question;
     private Date date = new Date();
+    private Boolean isActive = true;
     @OneToMany(cascade = CascadeType.ALL)
     private Set<AnswerOption> answerOptions = new HashSet<>();
 

@@ -5,10 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import uba.survey.ubasurvey.entity.NextId;
 import uba.survey.ubasurvey.repository.NextIdRepo;
 import uba.survey.ubasurvey.repository.SurveyRepo;
 import uba.survey.ubasurvey.repository.UserRepo;
 import uba.survey.ubasurvey.repository.VillageRepo;
+
+import java.util.Arrays;
 
 
 @RequiredArgsConstructor
@@ -61,16 +64,16 @@ public class AdminUserCreation implements CommandLineRunner {
 //
 //        }
 //
-//        if (nextIdRepo.findAll().isEmpty()){
-//            NextId village = new NextId();
-//            village.setSurveyId(villageSurvey.getId());
-//            village.setNextId("0000000000");
-//            NextId houseHold = new NextId();
-//            houseHold.setSurveyId(houseHoldSurvey.getId());
-//            houseHold.setNextId("00000");
-//            nextIdRepo.saveAll(Arrays.asList(village, houseHold));
-//
-//        }
+        if (nextIdRepo.findAll().isEmpty()){
+            NextId village = new NextId();
+            village.setSurveyId("7bf67165-0a45-4a8a-943f-0b49d6ce75af");
+            village.setNextId(0);
+            NextId houseHold = new NextId();
+            houseHold.setSurveyId("647e5849-3a3c-47ab-82ec-17326f8d3b68");
+            houseHold.setNextId(0);
+            nextIdRepo.saveAll(Arrays.asList(village, houseHold));
+
+        }
 
     }
 }

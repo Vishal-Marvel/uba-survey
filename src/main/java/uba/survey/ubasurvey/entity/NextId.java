@@ -13,5 +13,5 @@ public class NextId {
     private String id = UUID.randomUUID().toString();
 
     private String surveyId;
-    private String nextId;
+    private Integer nextId = 0;
 }

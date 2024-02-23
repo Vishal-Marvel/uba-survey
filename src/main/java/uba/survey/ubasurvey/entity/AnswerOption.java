@@ -5,6 +5,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -14,6 +15,8 @@ public class AnswerOption {
     @Id
     private String id = UUID.randomUUID().toString();
     private String optionName;
+
+    private Date date = new Date();
 
     @ManyToOne
     private Field field;

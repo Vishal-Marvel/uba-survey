@@ -22,6 +22,9 @@ public class Response {
     @ManyToOne
     private Village village;
 
+    @OneToOne
+    private UniqueSurvey responseId;
+
     @OneToMany(cascade = CascadeType.ALL)
     private Set<ResponseRecord> responseRecords = new HashSet<>();
 

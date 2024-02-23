@@ -1,20 +1,21 @@
 package uba.survey.ubasurvey.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uba.survey.ubasurvey.DTO.AddSectonReq;
 import uba.survey.ubasurvey.DTO.AddSurveyReq;
 import uba.survey.ubasurvey.DTO.MiscResponse;
+import uba.survey.ubasurvey.DTO.SectionListRes;
 import uba.survey.ubasurvey.entity.Section;
 import uba.survey.ubasurvey.entity.Survey;
 import uba.survey.ubasurvey.exceptions.NotFoundException;
 import uba.survey.ubasurvey.repository.SectionRepo;
 import uba.survey.ubasurvey.repository.SurveyRepo;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -25,6 +26,8 @@ public class MiscController {
     private final SectionRepo sectionRepo;
     private final SurveyRepo surveyRepo;
     @PostMapping("/section")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMIN_ASSIST')")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<MiscResponse> addSection(@RequestBody AddSectonReq addSectonReq){
         Section section = new Section();
         section.setSectionName(addSectonReq.getSectionName());
@@ -39,6 +42,8 @@ public class MiscController {
         return ResponseEntity.ok(MiscResponse.builder().response(section.getId()).build());
     }
     @PostMapping("/survey")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMIN_ASSIST')")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<MiscResponse> addSurvey(@RequestBody AddSurveyReq addSurveyReq){
         Survey survey = new Survey();
         survey.setSurveyName(addSurveyReq.getSurveyName());
@@ -54,12 +59,29 @@ public class MiscController {
     }
 
     @GetMapping("/section")
-    public ResponseEntity<List<String>> getSections(
+    public ResponseEntity<List<SectionListRes>> getSections(
             @RequestParam(name = "survey") String surveyId
     ){
         Survey survey = surveyRepo.findById(surveyId).orElseThrow(() -> new NotFoundException("Survey With id " + surveyId +
                 " Not Found"));
-        List<Section> sections = sectionRepo.findAllBySurvey(survey);
-        return ResponseEntity.ok(sections.stream().map(Section::getSectionName).toList());
+        List<Section> sections = sectionRepo.findAllBySurvey(survey).stream().sorted(Comparator.comparing(Section::getDate)).toList();
+//        System.out.println("sections = " + sections);
+        List<SectionListRes> sectionListRes = new ArrayList<>();
+        for (Section section : sections){
+            sectionListRes.add(SectionListRes.builder().sectionName(section.getSectionName()).sectionId(section.getId()).build());
+        }
+        return ResponseEntity.ok(sectionListRes);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @DeleteMapping("/section/{id}")
+    public ResponseEntity<MiscResponse> deleteSection(@PathVariable String id){
+        Section section = sectionRepo.findById(id).orElseThrow(() -> new NotFoundException("Section With id " + id +
+                " Not Found"));
+        section.setIsActive(false);
+        sectionRepo.save(section);
+        return ResponseEntity.ok(MiscResponse.builder().response("Section Deleted" + id).build());
+
     }
 }

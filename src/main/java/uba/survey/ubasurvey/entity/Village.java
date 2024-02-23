@@ -1,14 +1,12 @@
 package uba.survey.ubasurvey.entity;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,6 +18,19 @@ public class Village {
     @Id
     private String id = UUID.randomUUID().toString();
     private String villageName;
+    private Integer villageNum;
+    private String state;
+    private String district;
+    @ElementCollection
+    @CollectionTable(name = "gram_panchayat")
+    @MapKeyColumn(name = "gram_panchayat_name")
+    @Column(name = "gram_panchayat_code")
+    private Map<String, Integer> gramPanchyat;
+    private String blockName;
+    private String blockCode;
+    private String collegeName;
+    private Integer wardNo;
+    private String villageCode;
 
     @OneToMany(cascade = CascadeType.ALL)
     private Set<Response> surveyResponse = new HashSet<>();

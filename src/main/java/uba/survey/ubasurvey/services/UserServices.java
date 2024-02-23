@@ -27,7 +27,7 @@ public class UserServices {
     public String createUser(CreateUserReq createUserReq){
         User user = new User();
         user.setUserName(createUserReq.getUserName());
-        user.setRole(UserRole.ROLE_USER);
+        user.setRole(UserRole.ROLE_ADMIN_ASSIST);
         user.setPassword(passwordEncoder.encode(createUserReq.getPassword()));
         user.setEmail(createUserReq.getEmail());
         userRepo.save(user);
@@ -43,7 +43,39 @@ public class UserServices {
         SecurityContextHolder.getContext().setAuthentication(auth);
         return AuthenticationResponse.builder()
                 .token(jwtTokenProvider
-                        .generateToken(auth))
+                        .generateToken(auth, false))
+                .role(user.getRole().name())
+                .build();
+    }
+
+    public AuthenticationResponse appCreate(CreateUserReq createUserReq) {
+        User user = new User();
+        user.setUserName(createUserReq.getUserName());
+        user.setRole(UserRole.ROLE_USER);
+        user.setPassword(passwordEncoder.encode(createUserReq.getPassword()));
+        user.setEmail(createUserReq.getEmail());
+        userRepo.save(user);
+        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                user.getEmail(), createUserReq.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        return AuthenticationResponse.builder()
+                .token(jwtTokenProvider
+                        .generateToken(auth, true))
+                .role(user.getRole().name())
+                .build();
+    }
+
+    public AuthenticationResponse appAuthenticate(LoginRequest loginRequest) {
+        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginRequest.getEmail(), loginRequest.getPassword()));
+        User user = userRepo.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User Not found"));
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        return AuthenticationResponse.builder()
+                .token(jwtTokenProvider
+                        .generateToken(auth, true))
                 .role(user.getRole().name())
                 .build();
     }

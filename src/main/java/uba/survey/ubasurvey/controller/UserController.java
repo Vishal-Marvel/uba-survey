@@ -18,14 +18,26 @@ import uba.survey.ubasurvey.services.UserServices;
 public class UserController {
     private final UserServices userServices;
 
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/create")
     public ResponseEntity<MiscResponse> createUesr(@RequestBody CreateUserReq createUserReq){
         String response = userServices.createUser(createUserReq);
         return ResponseEntity.ok(MiscResponse.builder().response(response).build());
     }
 
+    @PostMapping("/createFromApp")
+    public ResponseEntity<AuthenticationResponse> createUesrFromApp(@RequestBody CreateUserReq createUserReq){
+        return ResponseEntity.ok(userServices.appCreate(createUserReq));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody LoginRequest loginRequest){
         return ResponseEntity.ok(userServices.authenticate(loginRequest));
+    }
+    @PostMapping("/loginFromApp")
+    public ResponseEntity<AuthenticationResponse> loginFromApp(@RequestBody LoginRequest loginRequest){
+        return ResponseEntity.ok(userServices.appAuthenticate(loginRequest));
     }
 }

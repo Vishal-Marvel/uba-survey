@@ -28,10 +28,18 @@ public class JWTTokenProvider {
      private long portalExpiration;
 
 
-     public String generateToken(Authentication authentication ) {
+     public String generateToken(Authentication authentication, Boolean app) {
+
           String usernameOrEmail = authentication.getName();
           Date currentDate = new Date();
-          long jwtExpirationDate = portalExpiration;
+          long jwtExpirationDate;
+          if (app){
+               jwtExpirationDate = portalExpiration*5;
+
+          }else{
+               jwtExpirationDate = portalExpiration;
+
+          }
 
           Date expiryDate = new Date(currentDate.getTime() + jwtExpirationDate);
           return Jwts.builder()

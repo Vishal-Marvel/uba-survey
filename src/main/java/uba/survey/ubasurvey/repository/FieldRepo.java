@@ -7,5 +7,5 @@ import uba.survey.ubasurvey.entity.Section;
 import java.util.List;
 
 public interface FieldRepo extends JpaRepository<Field, String> {
-    List<Field> findAllBySection(Section section);
+    List<Field> findAllBySectionAndIsActive(Section section, Boolean isActive);
 }

@@ -5,5 +5,6 @@ public enum FieldType {
     INTEGER,
     YES_NO,
     DROPDOWN,
-    MULTIPLE
+    MSQ,
+
 }

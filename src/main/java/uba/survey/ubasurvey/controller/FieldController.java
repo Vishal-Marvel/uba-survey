@@ -5,9 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import uba.survey.ubasurvey.DTO.AddFieldRequest;
-import uba.survey.ubasurvey.DTO.MiscResponse;
-import uba.survey.ubasurvey.DTO.SurveyQuestionResponse;
+import uba.survey.ubasurvey.DTO.*;
 import uba.survey.ubasurvey.services.FieldService;
 
 import java.io.IOException;
@@ -20,10 +18,10 @@ public class FieldController {
     private final FieldService fieldService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMIN_ASSIST')")
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<MiscResponse> addField(@ModelAttribute AddFieldRequest addFieldRequest) throws IOException {
-        return ResponseEntity.ok(MiscResponse.builder().response(fieldService.addField(addFieldRequest)).build());
+        return ResponseEntity.ok(MiscResponse.builder().response(fieldService.addField(null, addFieldRequest)).build());
     }
 
     @DeleteMapping("/{id}")
@@ -35,19 +33,35 @@ public class FieldController {
     }
 
     @GetMapping("/{survey}")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_ADMIN_ASSIST')")
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<SurveyQuestionResponse> getFieldsList (@PathVariable String survey){
         return ResponseEntity.ok(fieldService.getFields(survey));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_ADMIN_ASSIST')")
     @SecurityRequirement(name = "Bearer Authentication")
-    public ResponseEntity<Map<String, String>> getFields(@RequestParam(name = "section") String survey){
+    public ResponseEntity<Map<String, String>> getFields(
+            @RequestParam(name = "section") String survey
+    )
+    {
         return ResponseEntity.ok(fieldService.getSectionFields(survey));
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMIN_ASSIST')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PutMapping("/{id}")
+    public ResponseEntity<MiscResponse> updateField(@PathVariable String id, @ModelAttribute AddFieldRequest updateFieldReq) throws IOException {
+        return ResponseEntity.ok(MiscResponse.builder().response(fieldService.updateField(id, updateFieldReq)).build());
+    }
+
+    @GetMapping("/details/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<FieldResponseDTO> fetchField(@PathVariable String id) {
+        return ResponseEntity.ok(fieldService.getField(id));
+    }
 
 
 

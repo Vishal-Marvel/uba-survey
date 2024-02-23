@@ -7,7 +7,6 @@ import java.util.List;
 
 @Data
 public class ExcelQueryObject {
-    private String survey;
     private String surveyId;
     private Integer year;
     private String village;

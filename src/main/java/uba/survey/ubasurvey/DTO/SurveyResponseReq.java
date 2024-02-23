@@ -8,5 +8,6 @@ import java.util.List;
 public class SurveyResponseReq {
     private String surveyId;
     private String villageId;
+    private String responseId;
     private List<AnswerRes> answerResList;
 }
