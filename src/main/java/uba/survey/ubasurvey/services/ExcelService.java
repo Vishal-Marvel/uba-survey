@@ -91,38 +91,43 @@ public class ExcelService {
 
         if (!value.isEmpty()) {
             ExcelFieldObject object = value.get(0);
-            if (object.getAnswers().size() > 0) {
-                if (Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER")) {
-                    Sheet listSheet = workbook.getSheet(fieldResponseDTO.getQuestion());
-                    if (listSheet == null) {
-                        listSheet = workbook.createSheet(fieldResponseDTO.getQuestion());
-                        sheetIntegerHashMap.put(listSheet, 0);
-                    }
-                    Hyperlink hyperlink = workbook.getCreationHelper().createHyperlink(HyperlinkType.DOCUMENT);
-                    hyperlink.setAddress("'" + listSheet.getSheetName() + "'!A" + (sheetIntegerHashMap.get(listSheet) + 2));
+            try {
+                if (object.getAnswers().size() > 0) {
+                    if (Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER")) {
+                        Sheet listSheet = workbook.getSheet(fieldResponseDTO.getQuestion());
+                        if (listSheet == null) {
+                            listSheet = workbook.createSheet(fieldResponseDTO.getQuestion());
+                            sheetIntegerHashMap.put(listSheet, 0);
+                        }
+                        Hyperlink hyperlink = workbook.getCreationHelper().createHyperlink(HyperlinkType.DOCUMENT);
+                        hyperlink.setAddress("'" + listSheet.getSheetName() + "'!A" + (sheetIntegerHashMap.get(listSheet) + 2));
 
-                    Cell cell = row.createCell(cellIndex++);
-                    cell.setHyperlink(hyperlink);
-                    cell.setCellValue(object.getAnswers().get(0) + " records");
-                    cell.setCellStyle(linkStyle);
+                        Cell cell = row.createCell(cellIndex++);
+                        cell.setHyperlink(hyperlink);
+                        cell.setCellValue(object.getAnswers().get(0) + " records");
+                        cell.setCellStyle(linkStyle);
 
-                    sheetIntegerHashMap.put(listSheet, addListSheet(surveyId, excelDTO, response, listSheet, Integer.parseInt(object.getAnswers().get(0)), fieldResponseDTO.getSubfields(), sheetIntegerHashMap.get(listSheet), rowIndex, linkStyle));
+                        sheetIntegerHashMap.put(listSheet, addListSheet(surveyId, excelDTO, response, listSheet, Integer.parseInt(object.getAnswers().get(0)), fieldResponseDTO.getSubfields(), sheetIntegerHashMap.get(listSheet), rowIndex, linkStyle));
 //                                System.out.println("sublist" );
 
-                } else {
-                    if (Objects.equals(fieldResponseDTO.getFieldType(), "INTEGER") || Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER")) {
-                        row.createCell(cellIndex++).setCellValue(Integer.parseInt(object.getAnswers().get(0)));
-                    } else if (Objects.equals(fieldResponseDTO.getFieldType(), "DATE")) {
-                        row.createCell(cellIndex++).setCellValue(dateFormat.format(object.getAnswers().get(0)));
-                    } else if (Objects.equals(fieldResponseDTO.getFieldType(), "MSQ")) {
-                        row.createCell(cellIndex++).setCellValue(String.join(", ", object.getAnswers()));
                     } else {
-                        row.createCell(cellIndex++).setCellValue(object.getAnswers().get(0));
+                        if (Objects.equals(fieldResponseDTO.getFieldType(), "INTEGER") || Objects.equals(fieldResponseDTO.getFieldType(), "COUNTER")) {
+                            int data = Integer.parseInt(object.getAnswers().get(0));
+                            row.createCell(cellIndex++).setCellValue(data);
+                        } else if (Objects.equals(fieldResponseDTO.getFieldType(), "DATE")) {
+                            row.createCell(cellIndex++).setCellValue(dateFormat.format(object.getAnswers().get(0)));
+                        } else if (Objects.equals(fieldResponseDTO.getFieldType(), "MSQ")) {
+                            row.createCell(cellIndex++).setCellValue(String.join(", ", object.getAnswers()));
+                        } else {
+                            row.createCell(cellIndex++).setCellValue(object.getAnswers().get(0));
+                        }
                     }
-                }
-            } else {
-                row.createCell(cellIndex++).setCellValue("");
+                } else {
+                    row.createCell(cellIndex++).setCellValue("");
 
+                }
+            }catch (NumberFormatException e){
+                row.createCell(cellIndex++).setCellValue(object.getAnswers().get(0));
             }
         } else {
             row.createCell(cellIndex++).setCellValue("");
@@ -195,19 +200,23 @@ public class ExcelService {
                 Objects.equals(excelFieldObject.getResponseId(), response) && Objects.equals(excelFieldObject.getFieldId(), subField.getId()) && excelFieldObject.getCounter() == finalI - rowIndex).toList();
         if (!subValue.isEmpty()) {
             ExcelFieldObject object = subValue.get(0);
-            if (object.getAnswers().size() > 0) {
-                if (Objects.equals(subField.getFieldType(), "INTEGER") || Objects.equals(subField.getFieldType(), "COUNTER")) {
-                    row.createCell(cellIndex++).setCellValue(Integer.parseInt(object.getAnswers().get(0)));
-                } else if (Objects.equals(subField.getFieldType(), "DATE")) {
-                    row.createCell(cellIndex++).setCellValue(dateFormat.format(object.getAnswers().get(0)));
-                } else if (Objects.equals(subField.getFieldType(), "MSQ")) {
-                    row.createCell(cellIndex++).setCellValue(String.join(", ", object.getAnswers()));
+            try {
+                if (object.getAnswers().size() > 0) {
+                    if (Objects.equals(subField.getFieldType(), "INTEGER") || Objects.equals(subField.getFieldType(), "COUNTER")) {
+                        int data = Integer.parseInt(object.getAnswers().get(0));
+                        row.createCell(cellIndex++).setCellValue(data);
+                    } else if (Objects.equals(subField.getFieldType(), "DATE")) {
+                        row.createCell(cellIndex++).setCellValue(dateFormat.format(object.getAnswers().get(0)));
+                    } else if (Objects.equals(subField.getFieldType(), "MSQ")) {
+                        row.createCell(cellIndex++).setCellValue(String.join(", ", object.getAnswers()));
+                    } else {
+                        row.createCell(cellIndex++).setCellValue(object.getAnswers().get(0));
+                    }
                 } else {
-                    row.createCell(cellIndex++).setCellValue(object.getAnswers().get(0));
+                    row.createCell(cellIndex++).setCellValue("");
                 }
-            }
-            else {
-                row.createCell(cellIndex++).setCellValue("");
+            }catch (NumberFormatException e){
+                row.createCell(cellIndex++).setCellValue(object.getAnswers().get(0));
             }
         } else {
             row.createCell(cellIndex++).setCellValue("");

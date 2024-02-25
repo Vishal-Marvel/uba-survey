@@ -51,7 +51,7 @@ public class FieldService {
         if (addFieldRequest.getImage() != null) {
             field.setImage(imageService.compressImages(addFieldRequest.getImage()));
         }
-        if (Objects.equals(addFieldRequest.getFieldType(), "DROPDOWN") && addFieldRequest.getOptions().size() > 0) {
+        if ((Objects.equals(addFieldRequest.getFieldType(), "DROPDOWN")|| Objects.equals(addFieldRequest.getFieldType(), "MSQ")) && addFieldRequest.getOptions().size() > 0) {
             Set<AnswerOption> answerOptions = new HashSet<>();
 
             for (String optionName : addFieldRequest.getOptions()) {
@@ -198,7 +198,12 @@ public class FieldService {
             response.setId(field.getId());
             response.setImage(field.getImage());
             response.setQuestion(field.getQuestion());
-            response.setOptions(field.getAnswerOptions().stream().map(AnswerOption::getOptionName).sorted().toList());
+            try {
+                response.setOptions(field.getAnswerOptions().stream().sorted(Comparator.comparing(AnswerOption::getDate)).map(AnswerOption::getOptionName).toList());
+            }catch (Exception e){
+                response.setOptions(field.getAnswerOptions().stream().map(AnswerOption::getOptionName).toList());
+
+            }
             response.setFieldType(field.getFieldType());
             if (field.getYesField() != null && (field.getYesField().getIsActive() == null || field.getYesField().getIsActive())){
                 response.setYESField(FieldResponseDTO.builder()

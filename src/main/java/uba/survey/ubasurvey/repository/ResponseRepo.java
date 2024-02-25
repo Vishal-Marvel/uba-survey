@@ -11,8 +11,9 @@ import java.util.List;
 public interface ResponseRepo extends JpaRepository<Response, String> {
     List<Response> findAllBySurveyAndVillage(Survey survey, Village village);
     List<Response> findAllBySurvey(Survey survey);
-
     @Query("SELECT r FROM Response r where YEAR(r .date) = ?3 and r.survey = ?1 and r.village = ?2")
     List<Response> findAllBySurveyAndVillageAndYear(Survey survey, Village village, Integer year);
+    @Query("SELECT r FROM Response r where YEAR(r .date) = ?2 and r.survey = ?1")
+    List<Response> findAllBySurveyAndYear(Survey survey, Integer year);
 
 }

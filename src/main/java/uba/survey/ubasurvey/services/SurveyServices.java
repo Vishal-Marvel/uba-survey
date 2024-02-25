@@ -8,9 +8,10 @@ import uba.survey.ubasurvey.DTO.*;
 import uba.survey.ubasurvey.entity.*;
 import uba.survey.ubasurvey.exceptions.APIException;
 import uba.survey.ubasurvey.exceptions.NotFoundException;
-import uba.survey.ubasurvey.repository.*;
+import uba.survey.ubasurvey.repository.ResponseRepo;
+import uba.survey.ubasurvey.repository.SurveyRepo;
+import uba.survey.ubasurvey.repository.VillageRepo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class SurveyServices {
     private final ExcelService excelService;
 
 
-private ExcelFieldObject set( String fieldId, String responsId, List<String> answers){
+    private ExcelFieldObject set(String fieldId, String responsId, List<String> answers) {
         ExcelFieldObject object = new ExcelFieldObject();
         object.setFieldId(fieldId);
         object.setResponseId(responsId);
@@ -37,13 +38,21 @@ private ExcelFieldObject set( String fieldId, String responsId, List<String> ans
     public ByteArrayResource createExcel(ExcelQueryObject excelQueryObject) {
         try {
             Survey survey = surveyRepo.findById(excelQueryObject.getSurveyId()).orElseThrow(() -> new NotFoundException("Survey with id " + excelQueryObject.getSurveyId() + " not found"));
-            Village village = villageRepo.findById(excelQueryObject.getVillage()).orElseThrow(() -> new NotFoundException("Village with id " + excelQueryObject.getVillage() + " not found"));
+            List<Response> responses;
+            if (excelQueryObject.getVillage() != null) {
+                Village village = villageRepo.findById(excelQueryObject.getVillage()).orElseThrow(() -> new NotFoundException("Village with id " + excelQueryObject.getVillage() + " not found"));
 
-            List<Response> responses = responseRepo.findAllBySurveyAndVillageAndYear(
-                    survey,
-                    village,
-                    excelQueryObject.getYear()
-            );
+                responses = responseRepo.findAllBySurveyAndVillageAndYear(
+                        survey,
+                        village,
+                        excelQueryObject.getYear()
+                );
+            } else {
+                responses = responseRepo.findAllBySurveyAndYear(
+                        survey,
+                        excelQueryObject.getYear()
+                );
+            }
             SurveyQuestionResponse surveyQuestionResponse = fieldService.getFields(survey.getId());
             SectionResponse houseHoldSection = SectionResponse.builder().build();
             SectionResponse generalSection = SectionResponse.builder()
@@ -88,7 +97,7 @@ private ExcelFieldObject set( String fieldId, String responsId, List<String> ans
 
                             )
                     ).build();
-            if (survey.getSurveyName().contains("House")){
+            if (survey.getSurveyName().contains("House")) {
                 houseHoldSection = SectionResponse.builder()
                         .sectionName("House Hold Section ")
                         .fields(
@@ -161,35 +170,38 @@ private ExcelFieldObject set( String fieldId, String responsId, List<String> ans
             List<ExcelFieldObject> excelFieldObjects = new ArrayList<>();
             List<String> responseIds = new ArrayList<>();
             for (Response response : responses) {
-                responseIds.add(response.getId());
-                excelFieldObjects.add(set( "surveyId", response.getId(), List.of(response.getResponseId().getId())));
-                excelFieldObjects.add(set( "date", response.getId(), List.of(response.getDate().toString().substring(0, 10))));
-                excelFieldObjects.add(set( "username", response.getId(), List.of(response.getUser().getUserName())));
-                excelFieldObjects.add(set( "villageName", response.getId(), List.of(village.getVillageName())));
-                excelFieldObjects.add(set( "villageCode", response.getId(), List.of(village.getVillageCode())));
-                excelFieldObjects.add(set( "blockName", response.getId(), List.of(village.getBlockName()    )));
-                excelFieldObjects.add(set( "blockCode", response.getId(), List.of(village.getBlockCode())));
-                excelFieldObjects.add(set( "state", response.getId(), List.of(village.getState())));
-                excelFieldObjects.add(set( "district", response.getId(), List.of(village.getDistrict())));
-                excelFieldObjects.add(set( "gramPanchayatName", response.getId(), List.of(response.getResponseId().getGramPanchayatName())));
-                excelFieldObjects.add(set( "gramPanchayatCode", response.getId(), List.of(String.valueOf(response.getResponseId().getGramPanchayatCode()))));
-                excelFieldObjects.add(set( "ward", response.getId(), List.of(String.valueOf(response.getResponseId().getWardNo()))));
-                excelFieldObjects.add(set( "headName", response.getId(), List.of(response.getResponseId().getHeadName())));
-                excelFieldObjects.add(set( "headAadhaarNumber", response.getId(), List.of(response.getResponseId().getAadharNo())));
-                excelFieldObjects.add(set( "headMobileNumber", response.getId(), List.of(response.getResponseId().getMobileNo())));
-                excelFieldObjects.add(set( "rationCardNumber", response.getId(), List.of(response.getResponseId().getRationNo())));
-//                System.out.println("respo/nse = " + response.getResponseId().getCardType());
-                excelFieldObjects.add(set( "rationCardType", response.getId(), List.of(response.getResponseId().getCardType())));
+                Village village = response.getVillage();
 
+                responseIds.add(response.getId());
+                excelFieldObjects.add(set("surveyId", response.getId(), List.of(response.getResponseId().getId())));
+                excelFieldObjects.add(set("date", response.getId(), List.of(response.getDate().toString().substring(0, 10))));
+                excelFieldObjects.add(set("username", response.getId(), List.of(response.getUser().getUserName())));
+                excelFieldObjects.add(set("villageName", response.getId(), List.of(village.getVillageName())));
+                excelFieldObjects.add(set("villageCode", response.getId(), List.of(village.getVillageCode())));
+                excelFieldObjects.add(set("blockName", response.getId(), List.of(village.getBlockName())));
+                excelFieldObjects.add(set("blockCode", response.getId(), List.of(village.getBlockCode())));
+                excelFieldObjects.add(set("state", response.getId(), List.of(village.getState())));
+                excelFieldObjects.add(set("district", response.getId(), List.of(village.getDistrict())));
+                if (survey.getSurveyName().contains("House")) {
+                    excelFieldObjects.add(set("gramPanchayatName", response.getId(), List.of(response.getResponseId().getGramPanchayatName())));
+                    System.out.println("response.getResponseId().getGramPanchayatCode() = " + response.getResponseId().getGramPanchayatCode());
+                    excelFieldObjects.add(set("gramPanchayatCode", response.getId(), List.of(String.valueOf(response.getResponseId().getGramPanchayatCode()))));
+                    excelFieldObjects.add(set("ward", response.getId(), List.of(String.valueOf(response.getResponseId().getWardNo()))));
+                    excelFieldObjects.add(set("headName", response.getId(), List.of(response.getResponseId().getHeadName())));
+                    excelFieldObjects.add(set("headAadhaarNumber", response.getId(), List.of(response.getResponseId().getAadharNo())));
+                    excelFieldObjects.add(set("headMobileNumber", response.getId(), List.of(response.getResponseId().getMobileNo())));
+                    excelFieldObjects.add(set("rationCardNumber", response.getId(), List.of(response.getResponseId().getRationNo())));
+                    excelFieldObjects.add(set("rationCardType", response.getId(), List.of(response.getResponseId().getCardType())));
+                }
 
                 for (ResponseRecord responseRecord : response.getResponseRecords()) {
 //                    if (responseRecord.getField().getParentField() == null) {
-                        ExcelFieldObject excelFieldObject = new ExcelFieldObject();
-                        excelFieldObject.setFieldId(responseRecord.getField().getId());
-                        excelFieldObject.setResponseId(response.getId());
-                        excelFieldObject.setCounter(responseRecord.getCounter());
-                        excelFieldObject.setAnswers(responseRecord.getAnswers().stream().map(AnswerOption::getOptionName).toList());
-                        excelFieldObjects.add(excelFieldObject);
+                    ExcelFieldObject excelFieldObject = new ExcelFieldObject();
+                    excelFieldObject.setFieldId(responseRecord.getField().getId());
+                    excelFieldObject.setResponseId(response.getId());
+                    excelFieldObject.setCounter(responseRecord.getCounter());
+                    excelFieldObject.setAnswers(responseRecord.getAnswers().stream().map(AnswerOption::getOptionName).toList());
+                    excelFieldObjects.add(excelFieldObject);
 //                    }
                 }
             }
@@ -200,54 +212,9 @@ private ExcelFieldObject set( String fieldId, String responsId, List<String> ans
             return excelService.createExcel(excelDTO);
 
         } catch (Exception e) {
-
             throw new APIException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
 
-//    private Map<String, String> getFieldIds(Survey survey) {
-//
-//        Map<String, String> fieldIds = new HashMap<>();
-//        fieldIds.put("date", "Date");
-//        fieldIds.put("username", "User Name");
-//
-//        for (Section section : survey.getSections()) {
-//            for (Field field : section.getFields()) {
-//                if (field.getParentField() == null) {
-//                    fieldIds.put(field.getId(), field.getQuestion());
-//                    fieldIds.putAll(addfields(field.getYesField()));
-//                    fieldIds.putAll(addfields(field.getNoField()));
-//                    if (!Objects.equals(field.getFieldType(), "COUNTER")) {
-//                        for (Field subField : field.getSubFields()) {
-//                            fieldIds.putAll(addfields(subField));
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return fieldIds;
-//    }
-
-//    private Map<String, String> addfields(Field field) {
-//        if (field!=null) {
-//            Map<String, String> fieldIds = new HashMap<>();
-//            fieldIds.put(field.getId(), field.getQuestion());
-//
-//            if (field.getYesField() != null) {
-//                fieldIds.putAll(addfields(field.getYesField()));
-//            }
-//            if (field.getNoField() != null) {
-//                fieldIds.putAll(addfields(field.getNoField()));
-//            }
-//            if (!Objects.equals(field.getFieldType(), "COUNTER")) {
-//                for (Field subField : field.getSubFields()) {
-//                    fieldIds.putAll(addfields(subField));
-//                }
-//            }
-//
-//            return fieldIds;
-//        }
-//        return new HashMap<>();
-//    }
 }
