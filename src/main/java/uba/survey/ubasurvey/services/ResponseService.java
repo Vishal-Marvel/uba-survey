@@ -37,7 +37,7 @@ public class ResponseService {
                 .orElseThrow(() -> new NotFoundException(
                         "Survey Type with id " + surveyResponseReq.getSurveyId() + " not found"));
 
-        UniqueSurvey uniqueSurvey = uniqueSurveyRepo.findById(surveyResponseReq.getResponseId())
+        UniqueSurvey uniqueSurvey = uniqueSurveyRepo.findBySurveyIdAndIsActive(surveyResponseReq.getResponseId(), true)
                 .orElseThrow(() -> new NotFoundException(
                         "Survey Record with id " + surveyResponseReq.getResponseId() + " not found"));
 
@@ -48,7 +48,7 @@ public class ResponseService {
         response.setResponseId(uniqueSurvey);
         response.setActive(true);
         response = responseRepo.save(response);
-
+        uniqueSurveyRepo.save(uniqueSurvey);
         Set<Response> userResponses = user.getResponses();
         userResponses.add(response);
         userRepo.save(user);
@@ -135,7 +135,9 @@ public class ResponseService {
         response.setActive(false);
         responseRepo.save(response);
         UniqueSurvey uniqueSurvey = response.getResponseId();
-        String surveyId = uniqueSurvey.getId();
+        uniqueSurvey.setIsActive(false);
+        uniqueSurveyRepo.save(uniqueSurvey);
+        String surveyId = uniqueSurvey.getSurveyId();
         Survey survey = response.getSurvey();
         NextId nextId = nextIdRepo.findBySurveyId(survey.getId()).get();
         Map<String, Integer> nextIds = nextId.getNextId();
@@ -162,6 +164,8 @@ public class ResponseService {
         if (survey.getSurveyName().contains("House")) {
             List<UniqueSurvey> uniqueSurveyResponses = uniqueSurveyRepo.findAllByAadharNoOrRationNoOrMobileNo(
                     verifyRequest.getAadharNo(), verifyRequest.getRationNo(), verifyRequest.getMobileNo());
+            uniqueSurveyResponses = uniqueSurveyResponses.stream().filter(response -> response.getIsActive() == true)
+                    .toList();
             if (uniqueSurveyResponses.size() == 0) {
                 NextId nextId = nextIdRepo.findBySurveyId(survey.getId()).orElseGet(() -> {
                     NextId newNextId = new NextId();
@@ -177,7 +181,7 @@ public class ResponseService {
                 nextIds.put(id, nextIdValue);
                 nextId.setNextId(nextIds);
                 nextIdRepo.save(nextId);
-                uniqueSurvey.setId(id + "%04d".formatted(nextIdValue));
+                uniqueSurvey.setSurveyId(id + "%04d".formatted(nextIdValue));
                 uniqueSurvey.setAadharNo(verifyRequest.getAadharNo());
                 uniqueSurvey.setMobileNo(verifyRequest.getMobileNo());
                 uniqueSurvey.setHeadName(verifyRequest.getHeadName());
@@ -194,11 +198,12 @@ public class ResponseService {
                 if (response == null) {
                     return VerifyResponse.builder()
                             .first(true)
-                            .surveyId(uniqueSurvey2.getId()).build();
+                            .surveyId(uniqueSurvey2.getSurveyId()).build();
                 }
                 return VerifyResponse.builder()
                         .first(false)
-                        .surveyId(uniqueSurveyResponses.stream().map(UniqueSurvey::getId).toList().get(0)).build();
+                        .surveyId(uniqueSurveyResponses.stream().map(UniqueSurvey::getSurveyId).toList().get(0))
+                        .build();
             }
         } else {
             NextId nextId = nextIdRepo.findBySurveyId(survey.getId()).orElseGet(() -> {
@@ -215,7 +220,7 @@ public class ResponseService {
             nextIds.put(id, nextIdValue);
             nextId.setNextId(nextIds);
             nextIdRepo.save(nextId);
-            uniqueSurvey.setId(id + "%03d".formatted(nextIdValue));
+            uniqueSurvey.setSurveyId(id + "%03d".formatted(nextIdValue));
             uniqueSurvey.setGramPanchayatName(verifyRequest.getGramPanchayatName());
             uniqueSurvey.setGramPanchayatCode(verifyRequest.getGramPanchayatCode());
             uniqueSurvey.setVillageId(village.getId());
@@ -223,6 +228,6 @@ public class ResponseService {
         uniqueSurveyRepo.save(uniqueSurvey);
         return VerifyResponse.builder()
                 .first(true)
-                .surveyId(uniqueSurvey.getId()).build();
+                .surveyId(uniqueSurvey.getSurveyId()).build();
     }
 }

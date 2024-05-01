@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface UniqueSurveyRepo extends JpaRepository<UniqueSurvey, String> {
     List<UniqueSurvey> findAllByAadharNoOrRationNoOrMobileNo(String aadharNo, String rationNo, String mobileNo);
+
+    Optional<UniqueSurvey> findBySurveyIdAndIsActive(String surveyId, Boolean isActive);
 }
