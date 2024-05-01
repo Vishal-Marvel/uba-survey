@@ -30,21 +30,24 @@ public class ResponseService {
                 .orElseThrow(() -> new NotFoundException("User with email " + id + " not found"));
 
         Village village = villageRepo.findById(surveyResponseReq.getVillageId())
-                .orElseThrow(() -> new NotFoundException("Village with id " + surveyResponseReq.getVillageId() + " not found"));
+                .orElseThrow(() -> new NotFoundException(
+                        "Village with id " + surveyResponseReq.getVillageId() + " not found"));
 
         Survey survey = surveyRepo.findById(surveyResponseReq.getSurveyId())
-                .orElseThrow(() -> new NotFoundException("Survey Type with id " + surveyResponseReq.getSurveyId() + " not found"));
+                .orElseThrow(() -> new NotFoundException(
+                        "Survey Type with id " + surveyResponseReq.getSurveyId() + " not found"));
 
         UniqueSurvey uniqueSurvey = uniqueSurveyRepo.findById(surveyResponseReq.getResponseId())
-                .orElseThrow(() -> new NotFoundException("Survey Record with id " + surveyResponseReq.getResponseId() + " not found"));
+                .orElseThrow(() -> new NotFoundException(
+                        "Survey Record with id " + surveyResponseReq.getResponseId() + " not found"));
 
         Response response = new Response();
         response.setUser(user);
         response.setVillage(village);
         response.setSurvey(survey);
         response.setResponseId(uniqueSurvey);
+        response.setActive(true);
         response = responseRepo.save(response);
-
 
         Set<Response> userResponses = user.getResponses();
         userResponses.add(response);
@@ -55,7 +58,6 @@ public class ResponseService {
         Set<Response> surveyResponse = survey.getResponses();
         surveyResponse.add(response);
         surveyRepo.save(survey);
-
 
         Set<ResponseRecord> responseRecords = new HashSet<>();
 
@@ -100,13 +102,17 @@ public class ResponseService {
     }
 
     public SurveyRecordsListResponse getResponses(String surveyId, String villageId) {
-        Survey survey = surveyRepo.findById(surveyId).orElseThrow(() -> new NotFoundException("Survey with id " + surveyId + " Not Found"));
+        Survey survey = surveyRepo.findById(surveyId)
+                .orElseThrow(() -> new NotFoundException("Survey with id " + surveyId + " Not Found"));
         List<Response> responses;
         if (villageId != null) {
-            Village village = villageRepo.findById(villageId).orElseThrow(() -> new NotFoundException("Villaage with id " + villageId + " Not Found"));
-            responses = responseRepo.findAllBySurveyAndVillage(survey, village);
+            Village village = villageRepo.findById(villageId)
+                    .orElseThrow(() -> new NotFoundException("Villaage with id " + villageId + " Not Found"));
+            responses = responseRepo.findAllBySurveyAndVillage(survey, village).stream()
+                    .filter((response) -> response.getActive() == true).toList();
         } else {
-            responses = responseRepo.findAllBySurvey(survey);
+            responses = responseRepo.findAllBySurvey(survey).stream().filter((response) -> response.getActive() == true)
+                    .toList();
         }
         SurveyRecordsListResponse surveyRecordsListResponses = new SurveyRecordsListResponse();
         Map<Integer, Integer> yearResponses = new HashMap<>();
@@ -123,19 +129,55 @@ public class ResponseService {
         return surveyRecordsListResponses;
     }
 
+    public String deleteResponse(String id) {
+        Response response = responseRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Response with id " + id + " Not Found"));
+        response.setActive(false);
+        responseRepo.save(response);
+        UniqueSurvey uniqueSurvey = response.getResponseId();
+        String surveyId = uniqueSurvey.getId();
+        Survey survey = response.getSurvey();
+        NextId nextId = nextIdRepo.findBySurveyId(survey.getId()).get();
+        Map<String, Integer> nextIds = nextId.getNextId();
+
+        if (survey.getSurveyName().contains("House")) {
+            nextIds.put(surveyId.substring(0, 7), nextIds.getOrDefault(surveyId.substring(0, 7), 1) - 1);
+
+        } else {
+            nextIds.put(surveyId.substring(0, 8), nextIds.getOrDefault(surveyId.substring(0, 8), 1) - 1);
+
+        }
+        nextId.setNextId(nextIds);
+        nextIdRepo.save(nextId);
+        return "Deleted";
+    }
 
     public VerifyResponse verify(VerifyRequest verifyRequest) {
-        List<UniqueSurvey> uniqueSurveyResponses = uniqueSurveyRepo.findAllByAadharNoOrRationNoOrMobileNo(verifyRequest.getAadharNo(), verifyRequest.getRationNo(), verifyRequest.getMobileNo());
-        if (uniqueSurveyResponses.size() ==0) {
-            UniqueSurvey uniqueSurvey = new UniqueSurvey();
-            Village village = villageRepo.findById(verifyRequest.getVillageId()).orElseThrow(() -> new NotFoundException("Village with id " + verifyRequest.getVillageId() + " Not Found"));
-            Survey survey = surveyRepo.findById(verifyRequest.getSurveyId()).orElseThrow(() -> new NotFoundException("Survey with id " + verifyRequest.getSurveyId() + " Not Found"));
-            NextId nextId = nextIdRepo.findBySurveyId(survey.getId());
-            int nextIdValue = nextId.getNextId() + 1;
-            nextId.setNextId(nextIdValue);
-            nextIdRepo.save(nextId);
-            if (survey.getSurveyName().contains("House")) {
-                uniqueSurvey.setId("SAPHS" + village.getVillageNum() + verifyRequest.getWardNo() + "%04d".formatted(nextIdValue));
+        Survey survey = surveyRepo.findById(verifyRequest.getSurveyId()).orElseThrow(
+                () -> new NotFoundException("Survey with id " + verifyRequest.getSurveyId() + " Not Found"));
+        UniqueSurvey uniqueSurvey = new UniqueSurvey();
+
+        Village village = villageRepo.findById(verifyRequest.getVillageId()).orElseThrow(
+                () -> new NotFoundException("Village with id " + verifyRequest.getVillageId() + " Not Found"));
+        if (survey.getSurveyName().contains("House")) {
+            List<UniqueSurvey> uniqueSurveyResponses = uniqueSurveyRepo.findAllByAadharNoOrRationNoOrMobileNo(
+                    verifyRequest.getAadharNo(), verifyRequest.getRationNo(), verifyRequest.getMobileNo());
+            if (uniqueSurveyResponses.size() == 0) {
+                NextId nextId = nextIdRepo.findBySurveyId(survey.getId()).orElseGet(() -> {
+                    NextId newNextId = new NextId();
+                    newNextId.setSurveyId(survey.getId());
+                    return nextIdRepo.save(newNextId);
+                });
+                String id = "SAPHS" + village.getVillageNum() + verifyRequest.getWardNo();
+                Map<String, Integer> nextIds = nextId.getNextId();
+                if (nextIds == null) {
+                    nextIds = new HashMap<>();
+                }
+                int nextIdValue = nextIds.getOrDefault(id, 0) + 1;
+                nextIds.put(id, nextIdValue);
+                nextId.setNextId(nextIds);
+                nextIdRepo.save(nextId);
+                uniqueSurvey.setId(id + "%04d".formatted(nextIdValue));
                 uniqueSurvey.setAadharNo(verifyRequest.getAadharNo());
                 uniqueSurvey.setMobileNo(verifyRequest.getMobileNo());
                 uniqueSurvey.setHeadName(verifyRequest.getHeadName());
@@ -145,22 +187,42 @@ public class ResponseService {
                 uniqueSurvey.setVillageId(village.getId());
                 uniqueSurvey.setGramPanchayatCode(verifyRequest.getGramPanchayatCode());
                 uniqueSurvey.setGramPanchayatName(verifyRequest.getGramPanchayatName());
+
             } else {
-                Date date = new Date();
-                uniqueSurvey.setId("SAPVS" + "%02d".formatted(village.getVillageNum()) + String.valueOf(date.getYear()).substring(1) + "%02d".formatted(nextIdValue));
-                uniqueSurvey.setVillageId(village.getId());
-
+                UniqueSurvey uniqueSurvey2 = uniqueSurveyResponses.get(0);
+                Response response = responseRepo.findByResponseId(uniqueSurvey2).orElse(null);
+                if (response == null) {
+                    return VerifyResponse.builder()
+                            .first(true)
+                            .surveyId(uniqueSurvey2.getId()).build();
+                }
+                return VerifyResponse.builder()
+                        .first(false)
+                        .surveyId(uniqueSurveyResponses.stream().map(UniqueSurvey::getId).toList().get(0)).build();
             }
-
-
-            uniqueSurveyRepo.save(uniqueSurvey);
-            return VerifyResponse.builder()
-                    .first(true)
-                    .surveyId(uniqueSurvey.getId()).build();
+        } else {
+            NextId nextId = nextIdRepo.findBySurveyId(survey.getId()).orElseGet(() -> {
+                NextId newNextId = new NextId();
+                newNextId.setSurveyId(survey.getId());
+                return nextIdRepo.save(newNextId);
+            });
+            String id = "SAPVS" + verifyRequest.getGramPanchayatCode();
+            Map<String, Integer> nextIds = nextId.getNextId();
+            if (nextIds == null) {
+                nextIds = new HashMap<>();
+            }
+            int nextIdValue = nextIds.getOrDefault(id, 0) + 1;
+            nextIds.put(id, nextIdValue);
+            nextId.setNextId(nextIds);
+            nextIdRepo.save(nextId);
+            uniqueSurvey.setId(id + "%03d".formatted(nextIdValue));
+            uniqueSurvey.setGramPanchayatName(verifyRequest.getGramPanchayatName());
+            uniqueSurvey.setGramPanchayatCode(verifyRequest.getGramPanchayatCode());
+            uniqueSurvey.setVillageId(village.getId());
         }
+        uniqueSurveyRepo.save(uniqueSurvey);
         return VerifyResponse.builder()
-                .first(false)
-                .surveyId(uniqueSurveyResponses.stream().map(UniqueSurvey::getId).toList().toString()).build();
-
+                .first(true)
+                .surveyId(uniqueSurvey.getId()).build();
     }
 }

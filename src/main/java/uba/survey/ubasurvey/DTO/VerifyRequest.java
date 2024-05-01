@@ -13,6 +13,6 @@ public class VerifyRequest {
     private String villageId;
     private Integer wardNo;
     private String gramPanchayatName;
-    private Integer gramPanchayatCode;
+    private String gramPanchayatCode;
 
 }

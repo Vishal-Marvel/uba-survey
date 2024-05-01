@@ -22,7 +22,6 @@ public class Field {
     @ManyToOne
     private Section section;
 
-
     @OneToMany(cascade = CascadeType.ALL)
     private Set<Field> subFields;
 
@@ -42,20 +41,24 @@ public class Field {
     @OneToMany
     private Set<ResponseRecord> responseRecords;
 
-
-
     @Override
-    public int hashCode(){
+    public int hashCode() {
 
         return getClass().hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Field field = (Field) o;
-        return Objects.equals(id, field.id) && Objects.equals(fieldType, field.fieldType) && Objects.equals(answerOptions, field.answerOptions) && Objects.equals(section, field.section) && Objects.equals(subFields, field.subFields) && Objects.equals(parentField, field.parentField) && Arrays.equals(image, field.image) && Objects.equals(yesField, field.yesField) && Objects.equals(noField, field.noField);
+        return Objects.equals(id, field.id) && Objects.equals(fieldType, field.fieldType)
+                && Objects.equals(answerOptions, field.answerOptions) && Objects.equals(section, field.section)
+                && Objects.equals(subFields, field.subFields) && Objects.equals(parentField, field.parentField)
+                && Arrays.equals(image, field.image) && Objects.equals(yesField, field.yesField)
+                && Objects.equals(noField, field.noField);
     }
 
     @Override

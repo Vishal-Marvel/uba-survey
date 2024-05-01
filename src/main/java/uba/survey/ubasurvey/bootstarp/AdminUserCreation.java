@@ -64,16 +64,16 @@ public class AdminUserCreation implements CommandLineRunner {
 //
 //        }
 //
-        if (nextIdRepo.findAll().isEmpty()){
-            NextId village = new NextId();
-            village.setSurveyId("7bf67165-0a45-4a8a-943f-0b49d6ce75af");
-            village.setNextId(0);
-            NextId houseHold = new NextId();
-            houseHold.setSurveyId("647e5849-3a3c-47ab-82ec-17326f8d3b68");
-            houseHold.setNextId(0);
-            nextIdRepo.saveAll(Arrays.asList(village, houseHold));
-
-        }
+//        if (nextIdRepo.findAll().isEmpty()){
+//            NextId village = new NextId();
+//            village.setSurveyId("7bf67165-0a45-4a8a-943f-0b49d6ce75af");
+//            village.setNextId(0);
+//            NextId houseHold = new NextId();
+//            houseHold.setSurveyId("647e5849-3a3c-47ab-82ec-17326f8d3b68");
+//            houseHold.setNextId(0);
+//            nextIdRepo.saveAll(Arrays.asList(village, houseHold));
+//
+//        }
 
     }
 }

@@ -13,7 +13,7 @@ public class VillageAddRequest {
     private String villageCode;
     private String state;
     private String district;
-    private Map<String, Integer> gramPanchyat;
+    private Map<String, String> gramPanchyat;
     private String blockName;
     private String blockCode;
     private String collegeName;

@@ -46,12 +46,12 @@ public class SurveyServices {
                         survey,
                         village,
                         excelQueryObject.getYear()
-                );
+                ).stream().filter((response)->response.getActive()==true).toList();
             } else {
                 responses = responseRepo.findAllBySurveyAndYear(
                         survey,
                         excelQueryObject.getYear()
-                );
+                ).stream().filter((response)->response.getActive()==true).toList();
             }
             SurveyQuestionResponse surveyQuestionResponse = fieldService.getFields(survey.getId());
             SectionResponse houseHoldSection = SectionResponse.builder().build();

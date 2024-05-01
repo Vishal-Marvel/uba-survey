@@ -1,6 +1,5 @@
 package uba.survey.ubasurvey.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,16 +16,16 @@ public class Section {
     private String sectionName;
     private Date date = new Date();
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany
     private Set<Field> fields = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany
     private Set<ResponseRecord> responseRecords = new HashSet<>();
 
     @ManyToOne
     private Survey survey;
 
-    private Boolean isActive=true;
+    private Boolean isActive = true;
 
     @Override
     public int hashCode() {

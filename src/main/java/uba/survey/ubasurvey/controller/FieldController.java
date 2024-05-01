@@ -9,6 +9,7 @@ import uba.survey.ubasurvey.DTO.*;
 import uba.survey.ubasurvey.services.FieldService;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -42,7 +43,7 @@ public class FieldController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER', 'ROLE_ADMIN_ASSIST')")
     @SecurityRequirement(name = "Bearer Authentication")
-    public ResponseEntity<Map<String, String>> getFields(
+    public ResponseEntity<List<FieldListRes>> getFields(
             @RequestParam(name = "section") String survey
     )
     {

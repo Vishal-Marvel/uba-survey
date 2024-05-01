@@ -1,6 +1,9 @@
 package uba.survey.ubasurvey.services;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.Optional;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -16,67 +19,84 @@ import uba.survey.ubasurvey.entity.UserRole;
 import uba.survey.ubasurvey.repository.UserRepo;
 import uba.survey.ubasurvey.security.JWTTokenProvider;
 
-
 @Service
 @RequiredArgsConstructor
 public class UserServices {
-    private final UserRepo userRepo;
-    private final JWTTokenProvider jwtTokenProvider;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    public String createUser(CreateUserReq createUserReq){
-        User user = new User();
-        user.setUserName(createUserReq.getUserName());
-        user.setRole(UserRole.ROLE_ADMIN_ASSIST);
-        user.setPassword(passwordEncoder.encode(createUserReq.getPassword()));
-        user.setEmail(createUserReq.getEmail());
-        userRepo.save(user);
-        return "User Created";
-    }
+        private final UserRepo userRepo;
+        private final JWTTokenProvider jwtTokenProvider;
+        private final PasswordEncoder passwordEncoder;
+        private final AuthenticationManager authenticationManager;
 
-    public AuthenticationResponse authenticate(LoginRequest loginRequest) {
-        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginRequest.getEmail(), loginRequest.getPassword()));
-        User user = userRepo.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User Not found"));
+        private boolean checkUser(String email) {
+                Optional<User> user = userRepo.findByEmail(email);
+                if (user.isPresent()) {
+                        return false;
+                } else {
+                        return true;
+                }
+        }
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        return AuthenticationResponse.builder()
-                .token(jwtTokenProvider
-                        .generateToken(auth, false))
-                .role(user.getRole().name())
-                .build();
-    }
+        public String createUser(CreateUserReq createUserReq) {
+                User user = new User();
+                if (checkUser(createUserReq.getEmail())) {
+                        user.setUserName(createUserReq.getUserName());
+                        user.setRole(UserRole.ROLE_ADMIN_ASSIST);
+                        user.setPassword(passwordEncoder.encode(createUserReq.getPassword()));
+                        user.setEmail(createUserReq.getEmail());
+                        userRepo.save(user);
+                        return "User Created";
+                } else {
+                        return "User Name Already Exists";
+                }
+        }
 
-    public AuthenticationResponse appCreate(CreateUserReq createUserReq) {
-        User user = new User();
-        user.setUserName(createUserReq.getUserName());
-        user.setRole(UserRole.ROLE_USER);
-        user.setPassword(passwordEncoder.encode(createUserReq.getPassword()));
-        user.setEmail(createUserReq.getEmail());
-        userRepo.save(user);
-        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                user.getEmail(), createUserReq.getPassword()));
+        public AuthenticationResponse authenticate(LoginRequest loginRequest) {
+                Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                                loginRequest.getEmail(), loginRequest.getPassword()));
+                User user = userRepo.findByEmail(loginRequest.getEmail())
+                                .orElseThrow(() -> new UsernameNotFoundException("User Not found"));
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        return AuthenticationResponse.builder()
-                .token(jwtTokenProvider
-                        .generateToken(auth, true))
-                .role(user.getRole().name())
-                .build();
-    }
+                SecurityContextHolder.getContext().setAuthentication(auth);
+                return AuthenticationResponse.builder()
+                                .token(jwtTokenProvider
+                                                .generateToken(auth, false))
+                                .role(user.getRole().name())
+                                .build();
+        }
 
-    public AuthenticationResponse appAuthenticate(LoginRequest loginRequest) {
-        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginRequest.getEmail(), loginRequest.getPassword()));
-        User user = userRepo.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User Not found"));
+        public AuthenticationResponse appCreate(CreateUserReq createUserReq) {
+                User user = new User();
+                if (checkUser(createUserReq.getEmail())) {
+                        user.setUserName(createUserReq.getUserName());
+                        user.setRole(UserRole.ROLE_USER);
+                        user.setPassword(passwordEncoder.encode(createUserReq.getPassword()));
+                        user.setEmail(createUserReq.getEmail());
+                        userRepo.save(user);
+                } else {
+                        user = userRepo.findByEmail(createUserReq.getEmail()).orElse(null);
+                }
+                Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                                user.getEmail(), createUserReq.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        return AuthenticationResponse.builder()
-                .token(jwtTokenProvider
-                        .generateToken(auth, true))
-                .role(user.getRole().name())
-                .build();
-    }
+                SecurityContextHolder.getContext().setAuthentication(auth);
+                return AuthenticationResponse.builder()
+                                .token(jwtTokenProvider
+                                                .generateToken(auth, true))
+                                .role(user.getRole().name())
+                                .build();
+        }
+
+        public AuthenticationResponse appAuthenticate(LoginRequest loginRequest) {
+                Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                                loginRequest.getEmail(), loginRequest.getPassword()));
+                User user = userRepo.findByEmail(loginRequest.getEmail())
+                                .orElseThrow(() -> new UsernameNotFoundException("User Not found"));
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+                return AuthenticationResponse.builder()
+                                .token(jwtTokenProvider
+                                                .generateToken(auth, true))
+                                .role(user.getRole().name())
+                                .build();
+        }
 }

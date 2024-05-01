@@ -20,5 +20,6 @@ public class FieldResponseDTO {
     private FieldResponseDTO YESField;
     private FieldResponseDTO NoField;
     private byte[] image;
-
+    private String parentId;
+    private String parentQuestion;
 }

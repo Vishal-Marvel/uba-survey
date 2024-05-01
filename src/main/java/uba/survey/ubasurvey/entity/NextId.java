@@ -1,9 +1,9 @@
 package uba.survey.ubasurvey.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -11,7 +11,11 @@ import java.util.UUID;
 public class NextId {
     @Id
     private String id = UUID.randomUUID().toString();
-
     private String surveyId;
-    private Integer nextId = 0;
+
+    @ElementCollection
+    @CollectionTable(name = "next_id_map_table")
+    @MapKeyColumn(name = "survey_Id")
+    @Column(name = "next_Id")
+    private Map<String, Integer> nextId ;
 }

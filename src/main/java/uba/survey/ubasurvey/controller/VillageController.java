@@ -8,16 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import uba.survey.ubasurvey.DTO.MiscResponse;
 import uba.survey.ubasurvey.DTO.VillageAddRequest;
 import uba.survey.ubasurvey.DTO.VillageListResponse;
-import uba.survey.ubasurvey.entity.AnswerOption;
+import uba.survey.ubasurvey.DTO.VillageResponse;
 import uba.survey.ubasurvey.entity.Village;
 import uba.survey.ubasurvey.exceptions.NotFoundException;
-import uba.survey.ubasurvey.repository.OptionRepo;
 import uba.survey.ubasurvey.repository.VillageRepo;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,7 +26,7 @@ public class VillageController {
     @PreAuthorize("hasAnyRole('ROLE_ADMIN_ASSIST', 'ROLE_ADMIN')")
     @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping
-    public ResponseEntity<MiscResponse> addVillage(@RequestBody VillageAddRequest villageAddRequest){
+    public ResponseEntity<MiscResponse> addVillage(@RequestBody VillageAddRequest villageAddRequest) {
         Village village = new Village();
         village.setVillageName(villageAddRequest.getVillageName());
         village.setVillageCode(villageAddRequest.getVillageCode());
@@ -47,7 +44,7 @@ public class VillageController {
     }
 
     @GetMapping
-    public ResponseEntity<VillageListResponse> getVillages(){
+    public ResponseEntity<VillageListResponse> getVillages() {
         List<Village> villageList = villageRepo.findAll();
         VillageListResponse response = new VillageListResponse();
         response.setVillages(villageList.stream().collect(Collectors.toMap(Village::getId, Village::getVillageName)));
@@ -55,21 +52,55 @@ public class VillageController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Village> getVillage(@PathVariable String id){
-        Village village = villageRepo.findById(id).orElseThrow(()-> new NotFoundException("Village with id= " + id + " not found"));
-        return ResponseEntity.ok(village);
+    public ResponseEntity<VillageResponse> getVillage(@PathVariable String id) {
+        Village village = villageRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Village with id= " + id + " not found"));
+        return ResponseEntity.ok(VillageResponse.builder()
+                .id(village.getId())
+                .villageName(village.getVillageName())
+                .villageCode(village.getVillageCode())
+                .villageNum(village.getVillageNum())
+                .district(village.getDistrict())
+                .blockCode(village.getBlockCode())
+                .blockName(village.getBlockName())
+                .collegeName(village.getCollegeName())
+                .wardNo(village.getWardNo())
+                .state(village.getState())
+                .gramPanchyat(village.getGramPanchyat())
+                .build());
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<VillageResponse>> getAllVillage() {
+        List<Village> villages = villageRepo.findAll();
+        return ResponseEntity.ok(villages.stream().map((village) -> {
+            return VillageResponse.builder()
+                    .id(village.getId())
+                    .villageName(village.getVillageName())
+                    .villageCode(village.getVillageCode())
+                    .villageNum(village.getVillageNum())
+                    .district(village.getDistrict())
+                    .blockCode(village.getBlockCode())
+                    .blockName(village.getBlockName())
+                    .collegeName(village.getCollegeName())
+                    .wardNo(village.getWardNo())
+                    .state(village.getState())
+                    .gramPanchyat(village.getGramPanchyat())
+                    .build();
+        }).collect(Collectors.toList()));
+    }
+    
     @PreAuthorize("hasAnyRole('ROLE_ADMIN_ASSIST', 'ROLE_ADMIN')")
     @SecurityRequirement(name = "Bearer Authentication")
     @PutMapping("/{id}")
-    public ResponseEntity<MiscResponse> updateVillage(@PathVariable String id, @RequestBody Map<String, Integer> gramPanchayat){
-        Village village = villageRepo.findById(id).orElseThrow(()-> new NotFoundException("Village with id= " + id + " not found"));
+    public ResponseEntity<MiscResponse> updateVillage(@PathVariable String id,
+            @RequestBody Map<String, String> gramPanchayat) {
+        Village village = villageRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Village with id= " + id + " not found"));
         village.setGramPanchyat(gramPanchayat);
         villageRepo.save(village);
         return ResponseEntity.ok(MiscResponse.builder().response("Village Updated").build());
 
     }
-
 
 }

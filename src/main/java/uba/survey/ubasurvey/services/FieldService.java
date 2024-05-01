@@ -3,10 +3,7 @@ package uba.survey.ubasurvey.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import uba.survey.ubasurvey.DTO.AddFieldRequest;
-import uba.survey.ubasurvey.DTO.FieldResponseDTO;
-import uba.survey.ubasurvey.DTO.SectionResponse;
-import uba.survey.ubasurvey.DTO.SurveyQuestionResponse;
+import uba.survey.ubasurvey.DTO.*;
 import uba.survey.ubasurvey.entity.AnswerOption;
 import uba.survey.ubasurvey.entity.Field;
 import uba.survey.ubasurvey.entity.Section;
@@ -39,8 +36,9 @@ public class FieldService {
         }
         field.setFieldType(addFieldRequest.getFieldType());
         field.setQuestion(addFieldRequest.getQuestion());
-        Section section = sectionRepo.findById(addFieldRequest.getSection()).orElseThrow(() -> new NotFoundException("Section With id " + addFieldRequest.getSection() +
-                " Not Found"));
+        Section section = sectionRepo.findById(addFieldRequest.getSection())
+                .orElseThrow(() -> new NotFoundException("Section With id " + addFieldRequest.getSection() +
+                        " Not Found"));
         field.setSection(section);
         field.setIsActive(false);
         field = fieldRepo.save(field);
@@ -51,7 +49,8 @@ public class FieldService {
         if (addFieldRequest.getImage() != null) {
             field.setImage(imageService.compressImages(addFieldRequest.getImage()));
         }
-        if ((Objects.equals(addFieldRequest.getFieldType(), "DROPDOWN")|| Objects.equals(addFieldRequest.getFieldType(), "MSQ")) && addFieldRequest.getOptions().size() > 0) {
+        if ((Objects.equals(addFieldRequest.getFieldType(), "DROPDOWN")
+                || Objects.equals(addFieldRequest.getFieldType(), "MSQ")) && addFieldRequest.getOptions().size() > 0) {
             Set<AnswerOption> answerOptions = new HashSet<>();
 
             for (String optionName : addFieldRequest.getOptions()) {
@@ -66,8 +65,9 @@ public class FieldService {
 
         }
         if (addFieldRequest.getParentField() != null) {
-            Field parentField = fieldRepo.findById(addFieldRequest.getParentField()).orElseThrow(() -> new NotFoundException("Field With id " + addFieldRequest.getParentField() +
-                    " Not Found"));
+            Field parentField = fieldRepo.findById(addFieldRequest.getParentField())
+                    .orElseThrow(() -> new NotFoundException("Field With id " + addFieldRequest.getParentField() +
+                            " Not Found"));
             field.setParentField(parentField);
             Set<Field> parentSubFields = parentField.getSubFields();
             parentSubFields.add(field);
@@ -79,6 +79,13 @@ public class FieldService {
             if (field.getNoField() == null && field.getYesField() == null) {
                 throw new APIException("For Field Type Yes/No, Yes Field or No Field is required", HttpStatus.CONFLICT);
             }
+        }
+        if (addFieldRequest.getYES_question() == null && field.getYesField() != null) {
+            field.setYesField(null);
+        }
+
+        if (addFieldRequest.getNO_question() == null && field.getNoField() != null) {
+            field.setNoField(null);
         }
         field.setIsActive(true);
         fieldRepo.save(field);
@@ -95,15 +102,23 @@ public class FieldService {
 
     public void setYES_NOField(Field field, AddFieldRequest addFieldRequest, Section section) throws IOException {
         if (addFieldRequest.getYES_question() != null && addFieldRequest.getYES_fieldType() != null) {
-            //Yes Fields
-            Field yesField = new Field();
+            // Yes Fields
+            Field yesField;
+            if (field.getYesField() == null) {
+                yesField = new Field();
+            } else {
+                yesField = field.getYesField();
+            }
             yesField.setQuestion(addFieldRequest.getYES_question());
             yesField.setFieldType(addFieldRequest.getYES_fieldType());
             yesField.setSection(section);
             yesField = fieldRepo.save(yesField);
+            Set<Field> sectionFields = section.getFields();
+            sectionFields.add(yesField);
+            sectionRepo.save(section);
 
-
-            if (Objects.equals(addFieldRequest.getYES_fieldType(), "DROPDOWN") && addFieldRequest.getYES_options().size() > 0) {
+            if (Objects.equals(addFieldRequest.getYES_fieldType(), "DROPDOWN")
+                    && addFieldRequest.getYES_options().size() > 0) {
                 Set<AnswerOption> answerOptions = new HashSet<>();
 
                 for (String optionName : addFieldRequest.getYES_options()) {
@@ -126,15 +141,24 @@ public class FieldService {
             fieldRepo.save(yesField);
             field.setYesField(yesField);
         }
-        //No Fields
+        // No Fields
         if (addFieldRequest.getNO_question() != null && addFieldRequest.getNO_fieldType() != null) {
-            Field noField = new Field();
+            Field noField;
+            if (field.getNoField() == null) {
+                noField = new Field();
+            } else {
+                noField = field.getNoField();
+            }
             noField.setQuestion(addFieldRequest.getNO_question());
             noField.setFieldType(addFieldRequest.getNO_fieldType());
             noField.setSection(section);
             noField = fieldRepo.save(noField);
+            Set<Field> sectionFields = section.getFields();
+            sectionFields.add(noField);
+            sectionRepo.save(section);
 
-            if (Objects.equals(addFieldRequest.getNO_fieldType(), "DROPDOWN") && addFieldRequest.getNO_options().size() > 0) {
+            if (Objects.equals(addFieldRequest.getNO_fieldType(), "DROPDOWN")
+                    && addFieldRequest.getNO_options().size() > 0) {
                 Set<AnswerOption> answerOptions = new HashSet<>();
 
                 for (String optionName : addFieldRequest.getNO_options()) {
@@ -161,9 +185,11 @@ public class FieldService {
     }
 
     public SurveyQuestionResponse getFields(String surveyId) {
-        Survey survey = surveyRepo.findById(surveyId).orElseThrow(() -> new NotFoundException("Survey With id " + surveyId +
-                " Not Found"));
-        List<Section> sections = sectionRepo.findAllBySurvey(survey).stream().sorted(Comparator.comparing(Section::getDate))
+        Survey survey = surveyRepo.findById(surveyId)
+                .orElseThrow(() -> new NotFoundException("Survey With id " + surveyId +
+                        " Not Found"));
+        List<Section> sections = sectionRepo.findAllBySurvey(survey).stream()
+                .sorted(Comparator.comparing(Section::getDate))
                 .toList();
         SurveyQuestionResponse response = new SurveyQuestionResponse();
         response.setSurveyName(survey.getSurveyName());
@@ -171,12 +197,16 @@ public class FieldService {
         List<SectionResponse> sectionResponseList = new ArrayList<>();
         for (Section section : sections) {
 
-            Set<Field> sectionFields = section.getFields().stream().sorted(Comparator.comparing(Field::getDate)).collect(Collectors.toCollection(LinkedHashSet::new));
+            Set<Field> sectionFields = section.getFields().stream().sorted(Comparator.comparing(Field::getDate))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             List<FieldResponseDTO> fieldResponseDTOList = new ArrayList<>();
             for (Field field : sectionFields) {
                 if (field.getParentField() == null && (field.getIsActive() == null || field.getIsActive())) {
                     FieldResponseDTO fieldResponseDTO = setResponseDTO(field);
-                    fieldResponseDTO.setSubfields(field.getSubFields().stream().sorted(Comparator.comparing(Field::getDate)).filter((a) -> a.getIsActive() == null || a.getIsActive()).map(this::setResponseDTO).toList());
+                    fieldResponseDTO
+                            .setSubfields(field.getSubFields().stream().sorted(Comparator.comparing(Field::getDate))
+                                    .filter((a) -> a.getIsActive() == null || a.getIsActive()).map(this::setResponseDTO)
+                                    .toList());
                     fieldResponseDTOList.add(fieldResponseDTO);
                 }
 
@@ -198,31 +228,48 @@ public class FieldService {
             response.setId(field.getId());
             response.setImage(field.getImage());
             response.setQuestion(field.getQuestion());
+            if (field.getParentField() != null) {
+                response.setParentId(field.getParentField().getId());
+                response.setParentQuestion(field.getParentField().getQuestion());
+            }
             try {
-                response.setOptions(field.getAnswerOptions().stream().sorted(Comparator.comparing(AnswerOption::getDate)).map(AnswerOption::getOptionName).toList());
-            }catch (Exception e){
+                response.setOptions(field.getAnswerOptions().stream()
+                        .sorted(Comparator.comparing(AnswerOption::getDate)).map(AnswerOption::getOptionName).toList());
+            } catch (Exception e) {
                 response.setOptions(field.getAnswerOptions().stream().map(AnswerOption::getOptionName).toList());
 
             }
             response.setFieldType(field.getFieldType());
-            if (field.getYesField() != null && (field.getYesField().getIsActive() == null || field.getYesField().getIsActive())){
+            if (field.getYesField() != null
+                    && (field.getYesField().getIsActive() == null || field.getYesField().getIsActive())) {
                 response.setYESField(FieldResponseDTO.builder()
-                        .subfields(field.getYesField().getSubFields() != null ? field.getYesField().getSubFields().stream().filter((a) -> a.getIsActive() == null || a.getIsActive()).sorted(Comparator.comparing(Field::getDate)).map(this::setResponseDTO).toList() : null)
+                        .subfields(field.getYesField().getSubFields() != null
+                                ? field.getYesField().getSubFields().stream()
+                                        .filter((a) -> a.getIsActive() == null || a.getIsActive())
+                                        .sorted(Comparator.comparing(Field::getDate)).map(this::setResponseDTO).toList()
+                                : null)
                         .id(field.getYesField().getId())
                         .question(field.getYesField().getQuestion())
                         .fieldType(field.getYesField().getFieldType())
                         .image(field.getYesField().getImage())
-                        .options(field.getYesField().getAnswerOptions().stream().map(AnswerOption::getOptionName).sorted().toList())
+                        .options(field.getYesField().getAnswerOptions().stream().map(AnswerOption::getOptionName)
+                                .sorted().toList())
                         .build());
             }
-            if (field.getNoField() != null && (field.getNoField().getIsActive() == null || field.getNoField().getIsActive())) {
+            if (field.getNoField() != null
+                    && (field.getNoField().getIsActive() == null || field.getNoField().getIsActive())) {
                 response.setNoField(FieldResponseDTO.builder()
                         .id(field.getNoField().getId())
-                        .subfields(field.getNoField().getSubFields() != null ? field.getNoField().getSubFields().stream().filter((a) -> a.getIsActive() == null || a.getIsActive()).sorted(Comparator.comparing(Field::getDate)).map(this::setResponseDTO).toList() : null)
+                        .subfields(field.getNoField().getSubFields() != null
+                                ? field.getNoField().getSubFields().stream()
+                                        .filter((a) -> a.getIsActive() == null || a.getIsActive())
+                                        .sorted(Comparator.comparing(Field::getDate)).map(this::setResponseDTO).toList()
+                                : null)
                         .question(field.getNoField().getQuestion())
                         .fieldType(field.getNoField().getFieldType())
                         .image(field.getNoField().getImage())
-                        .options(field.getNoField().getAnswerOptions().stream().map(AnswerOption::getOptionName).sorted().toList())
+                        .options(field.getNoField().getAnswerOptions().stream().map(AnswerOption::getOptionName)
+                                .sorted().toList())
                         .build());
             }
             return response;
@@ -230,10 +277,15 @@ public class FieldService {
         return null;
     }
 
-    public Map<String, String> getSectionFields(String sectionId) {
-        Section section = sectionRepo.findById(sectionId).orElseThrow(() -> new NotFoundException("Section With id " + sectionId +
-                " Not Found"));
-        return section.getFields().stream().filter((field -> field.getIsActive() == null || field.getIsActive())).collect(Collectors.toMap(Field::getId, Field::getQuestion));
+    public List<FieldListRes> getSectionFields(String sectionId) {
+        Section section = sectionRepo.findById(sectionId)
+                .orElseThrow(() -> new NotFoundException("Section With id " + sectionId +
+                        " Not Found"));
+
+        return section.getFields().stream().filter((field -> field.getIsActive() == null || field.getIsActive()))
+                .sorted(Comparator.comparing(Field::getDate))
+                .map(field -> FieldListRes.builder().fieldId(field.getId()).fieldName(field.getQuestion()).build())
+                .toList();
     }
 
     public FieldResponseDTO getField(String fieldId) {

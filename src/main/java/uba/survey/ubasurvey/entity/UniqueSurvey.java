@@ -19,5 +19,5 @@ public class UniqueSurvey {
     private String villageId;
     private Integer wardNo;
     private String gramPanchayatName;
-    private Integer gramPanchayatCode;
+    private String gramPanchayatCode;
 }

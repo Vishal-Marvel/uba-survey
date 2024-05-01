@@ -22,17 +22,23 @@ public class Response {
     @ManyToOne
     private Village village;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private UniqueSurvey responseId;
 
     @OneToMany(cascade = CascadeType.ALL)
     private Set<ResponseRecord> responseRecords = new HashSet<>();
 
+    private Boolean active;
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Response response)) return false;
-        return Objects.equals(getId(), response.getId()) && Objects.equals(getSurvey(), response.getSurvey()) && Objects.equals(getVillage(), response.getVillage()) && Objects.equals(getResponseRecords(), response.getResponseRecords());
+        if (this == o)
+            return true;
+        if (!(o instanceof Response response))
+            return false;
+        return Objects.equals(getId(), response.getId()) && Objects.equals(getSurvey(), response.getSurvey())
+                && Objects.equals(getVillage(), response.getVillage())
+                && Objects.equals(getResponseRecords(), response.getResponseRecords());
     }
 
     @Override
@@ -51,6 +57,5 @@ public class Response {
     public int hashCode() {
         return getSurvey().hashCode();
     }
-
 
 }

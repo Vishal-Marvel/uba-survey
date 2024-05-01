@@ -25,7 +25,7 @@ public class Village {
     @CollectionTable(name = "gram_panchayat")
     @MapKeyColumn(name = "gram_panchayat_name")
     @Column(name = "gram_panchayat_code")
-    private Map<String, Integer> gramPanchyat;
+    private Map<String, String> gramPanchyat;
     private String blockName;
     private String blockCode;
     private String collegeName;
